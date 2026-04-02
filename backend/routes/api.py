@@ -4,8 +4,6 @@ import io
 import json
 import os
 import sys
-import urllib.request
-import urllib.parse
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -13,7 +11,7 @@ from models.database import (
     create_user, get_user_by_email, get_user_by_id,
     update_last_login, save_prediction, get_user_predictions,
     get_all_users, get_all_predictions, get_prediction_stats,
-    verify_password
+    verify_password, reset_password
 )
 from utils.auth import create_token, token_required, admin_required
 from utils.predictor import predict, generate_insights, get_predictor, FEATURES
@@ -30,6 +28,7 @@ def register():
     username = (d.get('username') or '').strip()
     email = (d.get('email') or '').strip().lower()
     password = d.get('password') or ''
+    dob = (d.get('dob') or '').strip()
 
     if not username or not email or not password:
         return jsonify({'error': 'All fields required'}), 400
@@ -37,7 +36,7 @@ def register():
         return jsonify({'error': 'Password must be at least 6 characters'}), 400
 
     try:
-        uid = create_user(username, email, password)
+        uid = create_user(username, email, password, dob or None)
     except ValueError as e:
         msg = str(e)
         if 'username' in msg:
@@ -83,6 +82,42 @@ def me():
     })
 
 
+@api.route('/auth/verify-dob', methods=['POST'])
+def verify_dob():
+    d = request.get_json(force=True)
+    email = (d.get('email') or '').strip().lower()
+    dob   = (d.get('dob') or '').strip()
+    if not email or not dob:
+        return jsonify({'error': 'Email and date of birth required'}), 400
+    user = get_user_by_email(email)
+    if not user:
+        return jsonify({'error': 'No account found with that email'}), 404
+    if not user.get('dob'):
+        return jsonify({'error': 'No security question set for this account'}), 400
+    if user['dob'] != dob:
+        return jsonify({'error': 'Date of birth does not match'}), 401
+    return jsonify({'verified': True})
+
+
+@api.route('/auth/reset-password', methods=['POST'])
+def do_reset_password():
+    d = request.get_json(force=True)
+    email    = (d.get('email') or '').strip().lower()
+    dob      = (d.get('dob') or '').strip()
+    password = d.get('password') or ''
+    if not email or not dob or not password:
+        return jsonify({'error': 'All fields required'}), 400
+    if len(password) < 6:
+        return jsonify({'error': 'Password must be at least 6 characters'}), 400
+    user = get_user_by_email(email)
+    if not user:
+        return jsonify({'error': 'No account found with that email'}), 404
+    if not user.get('dob') or user['dob'] != dob:
+        return jsonify({'error': 'Verification failed'}), 401
+    reset_password(email, password)
+    return jsonify({'message': 'Password reset successfully'})
+
+
 # ─── Prediction ────────────────────────────────────────────────────────────────
 
 @api.route('/predict', methods=['POST'])
@@ -120,7 +155,13 @@ def make_prediction():
     result = predict(data)
     insights = generate_insights(data, result['predicted_savings'])
 
-    save_prediction(request.user_id, data, result['predicted_savings'], result['model_used'])
+    file_name = d.get('file_name') or None
+    file_data = d.get('file_data') or None
+    if file_data and not isinstance(file_data, str):
+        file_data = json.dumps(file_data)
+
+    save_prediction(request.user_id, data, result['predicted_savings'], result['model_used'],
+                    file_name=file_name, file_data=file_data)
 
     return jsonify({
         **result,
@@ -201,34 +242,6 @@ def retrain():
 
 
 # ─── Health ────────────────────────────────────────────────────────────────────
-
-@api.route('/google/geocode', methods=['GET'])
-def google_geocode():
-    """Resolve address to coordinates via Google Geocoding API."""
-    address = request.args.get('address', '').strip()
-    if not address:
-        return jsonify({'error': 'Query parameter "address" is required'}), 400
-
-    api_key = os.environ.get('GOOGLE_API_KEY', 'AIzaSyBFbbl0jjXIWRC4A6J12ZMYoxpYQwXFt2w')
-    url = ('https://maps.googleapis.com/maps/api/geocode/json?' +
-           urllib.parse.urlencode({'address': address, 'key': api_key}))
-
-    try:
-        with urllib.request.urlopen(url, timeout=10) as res:
-            payload = json.loads(res.read())
-    except Exception as e:
-        return jsonify({'error': 'External API request failed', 'details': str(e)}), 502
-
-    if payload.get('status') != 'OK':
-        return jsonify({'error': 'Geocoding failed', 'details': payload.get('status')}), 400
-
-    first = payload['results'][0]
-    return jsonify({
-        'formatted_address': first.get('formatted_address'),
-        'location': first.get('geometry', {}).get('location'),
-        'google_status': payload.get('status')
-    })
-
 
 @api.route('/health', methods=['GET'])
 def health():

@@ -26,7 +26,8 @@ def init_db():
             password_hash TEXT NOT NULL,
             role TEXT DEFAULT 'user',
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            last_login TEXT
+            last_login TEXT,
+            dob TEXT
         );
 
         CREATE TABLE IF NOT EXISTS predictions (
@@ -40,6 +41,8 @@ def init_db():
             lifestyle_score REAL,
             predicted_savings REAL,
             model_used TEXT,
+            file_name TEXT,
+            file_data TEXT,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id)
         );
@@ -68,13 +71,19 @@ def verify_password(password: str, hashed: str) -> bool:
     return hash_password(password) == hashed
 
 
-def create_user(username, email, password):
+def create_user(username, email, password, dob=None):
     conn = get_db()
     c = conn.cursor()
+    # Add dob column if missing (migration safety)
+    try:
+        c.execute("ALTER TABLE users ADD COLUMN dob TEXT")
+        conn.commit()
+    except Exception:
+        pass
     try:
         c.execute(
-            "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
-            (username, email, hash_password(password))
+            "INSERT INTO users (username, email, password_hash, dob) VALUES (?, ?, ?, ?)",
+            (username, email, hash_password(password), dob)
         )
         conn.commit()
         return c.lastrowid
@@ -82,6 +91,14 @@ def create_user(username, email, password):
         raise ValueError(str(e))
     finally:
         conn.close()
+
+
+def reset_password(email, new_password):
+    conn = get_db()
+    conn.execute("UPDATE users SET password_hash=? WHERE email=?",
+                 (hash_password(new_password), email))
+    conn.commit()
+    conn.close()
 
 
 def get_user_by_email(email):
@@ -108,19 +125,27 @@ def update_last_login(uid):
     conn.close()
 
 
-def save_prediction(user_id, data: dict, predicted_savings: float, model_used: str):
+def save_prediction(user_id, data: dict, predicted_savings: float, model_used: str,
+                    file_name: str = None, file_data: str = None):
     conn = get_db()
     c = conn.cursor()
+    # Migration safety: add columns if missing
+    for col, typ in [('file_name', 'TEXT'), ('file_data', 'TEXT')]:
+        try:
+            c.execute(f'ALTER TABLE predictions ADD COLUMN {col} {typ}')
+            conn.commit()
+        except Exception:
+            pass
     c.execute("""
         INSERT INTO predictions
         (user_id, income, fixed_expenses, variable_expenses, total_expenses,
-         savings_goal, lifestyle_score, predicted_savings, model_used)
-        VALUES (?,?,?,?,?,?,?,?,?)
+         savings_goal, lifestyle_score, predicted_savings, model_used, file_name, file_data)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?)
     """, (
         user_id,
         data['income'], data['fixed_expenses'], data['variable_expenses'],
         data['total_expenses'], data['savings_goal'], data['lifestyle_score'],
-        predicted_savings, model_used
+        predicted_savings, model_used, file_name, file_data
     ))
     conn.commit()
     pid = c.lastrowid

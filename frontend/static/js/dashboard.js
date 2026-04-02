@@ -8,13 +8,8 @@ const user = () => JSON.parse(localStorage.getItem('finai_user') || '{}');
   if (!token()) window.location.href = '/login';
 })();
 
-const INR_TO_USD = 1 / 82.5;
-const USD_TO_INR = 82.5;
-
-function formatUSD(amount) {
-  const abs = Math.abs(amount);
-  return (amount < 0 ? '-$' : '$') + abs.toLocaleString('en-US', { maximumFractionDigits: 0 });
-}
+const INR_TO_USD = 1;
+const USD_TO_INR = 1;
 
 function formatINR(amount) {
   const abs = Math.abs(amount);
@@ -62,6 +57,8 @@ function fillSample(type) {
 
 // ── Prediction ─────────────────────────────────────────────────────
 let lastResult = null;
+let fileImported = false;
+let lastFileSnapshot = null; // { name, rows: [[...],[...]] }
 
 async function runPrediction() {
   const income = parseFloat(document.getElementById('income').value);
@@ -71,8 +68,13 @@ async function runPrediction() {
   const lifestyle = parseFloat(document.getElementById('lifestyle').value);
   const errEl = document.getElementById('predictError');
 
-  if (isNaN(income) || isNaN(fixed) || isNaN(variable) || isNaN(goal)) {
-    errEl.textContent = 'Please fill in all fields.';
+  // If no file imported, all fields required; if file imported, only savings goal is required
+  const missingManual = !fileImported && (isNaN(income) || isNaN(fixed) || isNaN(variable));
+  const missingGoal = isNaN(goal);
+  if (missingManual || missingGoal) {
+    errEl.textContent = fileImported
+      ? 'Please fill in Savings Goal and Lifestyle Score.'
+      : 'Please fill in all fields, or import a file to auto-fill Income and Expenses.';
     errEl.classList.add('show');
     return;
   }
@@ -81,22 +83,18 @@ async function runPrediction() {
   setPredictLoading(true);
   showOverlay(true);
 
-  const usdIncome = Number((income * INR_TO_USD).toFixed(6));
-  const usdFixed = Number((fixed * INR_TO_USD).toFixed(6));
-  const usdVariable = Number((variable * INR_TO_USD).toFixed(6));
-  const usdGoal = Number((goal * INR_TO_USD).toFixed(6));
-
   try {
     const res = await fetch(`${API}/predict`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token() },
       body: JSON.stringify({
-        income: usdIncome,
-        fixed_expenses: usdFixed,
-        variable_expenses: usdVariable,
-        savings_goal: usdGoal,
+        income: income,
+        fixed_expenses: fixed,
+        variable_expenses: variable,
+        savings_goal: goal,
         lifestyle_score: lifestyle,
-        currency: 'INR'
+        file_name: lastFileSnapshot ? lastFileSnapshot.name : null,
+        file_data: lastFileSnapshot ? lastFileSnapshot.rows : null
       })
     });
     const data = await res.json();
@@ -107,7 +105,6 @@ async function runPrediction() {
     lastResult = data;
     displayResult(data, income, fixed, variable, goal);
     displayInsights(data.insights || []);
-    displayModelCompare(data);
     await loadHistory();
   } catch (e) {
     errEl.textContent = e.message;
@@ -119,23 +116,20 @@ async function runPrediction() {
 }
 
 function displayResult(data, income, fixed, variable, goal) {
-  const predUsd = data.predicted_savings;
-  const predInr = predUsd * USD_TO_INR;
+  const predInr = data.predicted_savings;
   const valEl = document.getElementById('resultValue');
   const inrEl = document.getElementById('resultValueINR');
 
   valEl.textContent = formatINR(predInr);
-  valEl.className = 'result-value ' + (predUsd >= 0 ? 'result-positive' : 'result-negative');
-
-  inrEl.textContent = `${formatUSD(predUsd)} (approx.)`;
-  inrEl.style.color = predUsd >= 0 ? 'var(--success)' : 'var(--danger)';
+  valEl.className = 'result-value ' + (predInr >= 0 ? 'result-positive' : 'result-negative');
+  inrEl.textContent = 'Predicted Annual Savings (INR)';
+  inrEl.style.color = 'var(--text-dim)';
 
   document.getElementById('modelBadge').textContent = '⚡ ' + data.model_used.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   document.getElementById('resultEmpty').style.display = 'none';
   document.getElementById('resultCard').classList.remove('result-hidden');
 
-  // Bar chart
-  renderResultChart(income, fixed + variable, pred, goal);
+  renderResultChart(income, fixed + variable, predInr, goal);
 }
 
 let resultChartInst = null;
@@ -145,7 +139,7 @@ function renderResultChart(income, expenses, savings, goal) {
   resultChartInst = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['Income', 'Expenses', 'Predicted Savings', 'Goal'],
+      labels: [['Income'], ['Expenses'], ['Predicted', 'Savings'], ['Savings', 'Goal']],
       datasets: [{
         data: [income, expenses, Math.max(savings, 0), goal],
         backgroundColor: [
@@ -165,69 +159,14 @@ function renderResultChart(income, expenses, savings, goal) {
       scales: {
         y: {
           grid: { color: 'rgba(255,255,255,0.05)' },
-          ticks: { color: '#94a3b8', callback: v => '$' + v.toLocaleString() }
+          ticks: { color: '#94a3b8', callback: v => '₹' + (v/1000).toFixed(0) + 'k' }
         },
-        x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+        x: {
+          grid: { display: false },
+          ticks: { color: '#94a3b8', font: { size: 11 }, maxRotation: 0, minRotation: 0 }
+        }
       },
       animation: { duration: 800, easing: 'easeOutQuart' }
-    }
-  });
-}
-
-let compareChartInst = null;
-function displayModelCompare(data) {
-  document.getElementById('modelCompare').style.display = 'block';
-  document.getElementById('lrPred').textContent = formatINR(data.lr_prediction * USD_TO_INR);
-  document.getElementById('rfPred').textContent = formatINR(data.rf_prediction * USD_TO_INR);
-
-  const m = data.metrics || {};
-  const best = m.best === 'linear_regression' ? m.linear_regression : m.random_forest;
-  document.getElementById('metricR2').textContent = best?.r2 ?? '—';
-  document.getElementById('metricMAE').textContent = best?.mae ? '$' + best.mae.toLocaleString() : '—';
-  document.getElementById('metricRMSE').textContent = best?.rmse ? '$' + best.rmse.toLocaleString() : '—';
-
-  const ctx2 = document.getElementById('compareChart').getContext('2d');
-  if (compareChartInst) compareChartInst.destroy();
-  compareChartInst = new Chart(ctx2, {
-    type: 'radar',
-    data: {
-      labels: ['R²', 'Low MAE', 'Low RMSE', 'Speed', 'Interpretability'],
-      datasets: [
-        {
-          label: 'Linear Regression',
-          data: [
-            (m.linear_regression?.r2 || 0) * 10,
-            10 - (m.linear_regression?.mae || 0) / 2000,
-            10 - (m.linear_regression?.rmse || 0) / 2000,
-            9, 9
-          ],
-          borderColor: '#0066ff', backgroundColor: 'rgba(0,102,255,0.1)',
-          pointBackgroundColor: '#0066ff',
-        },
-        {
-          label: 'Random Forest',
-          data: [
-            (m.random_forest?.r2 || 0) * 10,
-            10 - (m.random_forest?.mae || 0) / 2000,
-            10 - (m.random_forest?.rmse || 0) / 2000,
-            6, 5
-          ],
-          borderColor: '#00d4aa', backgroundColor: 'rgba(0,212,170,0.1)',
-          pointBackgroundColor: '#00d4aa',
-        }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } },
-      scales: {
-        r: {
-          grid: { color: 'rgba(255,255,255,0.06)' },
-          ticks: { color: '#64748b', stepSize: 2, backdropColor: 'transparent' },
-          pointLabels: { color: '#94a3b8', font: { size: 11 } },
-          min: 0, max: 10
-        }
-      }
     }
   });
 }
@@ -259,6 +198,7 @@ async function loadHistory() {
     if (!res.ok) return;
     const data = await res.json();
     renderHistory(data.predictions || []);
+    renderAnalytics(data.predictions || []);
 
     // Profile prediction count
     const countEl = document.getElementById('profilePredCount');
@@ -269,7 +209,7 @@ async function loadHistory() {
 function renderHistory(preds) {
   const tbody = document.getElementById('historyBody');
   if (!preds.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:40px">No predictions yet. Run your first prediction!</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-dim);padding:40px">No predictions yet. Run your first prediction!</td></tr>';
     return;
   }
   tbody.innerHTML = preds.map((p, i) => `
@@ -283,8 +223,223 @@ function renderHistory(preds) {
         ${formatINR(p.predicted_savings * USD_TO_INR)}
       </td>
       <td><span class="status-badge user" style="font-size:0.7rem">${p.model_used.replace(/_/g,' ')}</span></td>
+      <td>${p.file_name
+        ? `<button onclick='openFileViewer(${JSON.stringify(p.file_name)}, ${JSON.stringify(p.file_data)})'
+             style="background:rgba(0,212,170,0.1);border:1px solid rgba(0,212,170,0.3);color:var(--green);border-radius:6px;padding:3px 10px;font-size:0.75rem;cursor:pointer">
+             📎 ${p.file_name}</button>`
+        : '<span style="color:var(--text-dim);font-size:0.78rem">—</span>'}
+      </td>
     </tr>
   `).join('');
+}
+
+// ── Analytics ───────────────────────────────────────────────────
+let trendChartInst = null, donutChartInst = null;
+let allHistoryPreds = [];
+let analyticsMode = 'current';
+
+function setAnalyticsMode(mode) {
+  analyticsMode = mode;
+  document.querySelectorAll('[id^="modeBtn-"]').forEach(b => b.classList.remove('active'));
+  document.getElementById('modeBtn-' + mode).classList.add('active');
+  document.getElementById('comparePickerWrap').style.display = mode === 'compare' ? 'flex' : 'none';
+  refreshAnalytics();
+}
+
+function refreshAnalytics() {
+  renderAnalytics(allHistoryPreds);
+}
+
+function renderAnalytics(preds) {
+  allHistoryPreds = preds;
+  const total = preds.length;
+  document.getElementById('aTotalPred').textContent = total;
+
+  // Populate compare picker (skip index 0 = latest)
+  const picker = document.getElementById('comparePicker');
+  const prevVal = picker.value;
+  picker.innerHTML = '<option value="">— pick a past prediction —</option>';
+  preds.slice(1).forEach((p, i) => {
+    const opt = document.createElement('option');
+    opt.value = i + 1;
+    opt.textContent = `#${i + 2} — ${new Date(p.created_at).toLocaleDateString()} (${formatINR(p.predicted_savings * USD_TO_INR)})`;
+    picker.appendChild(opt);
+  });
+  if (prevVal) picker.value = prevVal;
+
+  if (!total) return;
+
+  if (analyticsMode === 'current') {
+    renderCurrentMode(preds);
+  } else if (analyticsMode === 'history') {
+    renderHistoryMode(preds);
+  } else {
+    renderCompareMode(preds);
+  }
+}
+
+// ─ Current: show latest prediction only
+function renderCurrentMode(preds) {
+  const p = preds[0];
+  if (!p) return;
+  const inc = p.income * USD_TO_INR;
+  const exp = p.total_expenses * USD_TO_INR;
+  const sav = p.predicted_savings * USD_TO_INR;
+  const goal = p.savings_goal * USD_TO_INR;
+
+  document.getElementById('aAvgIncome').textContent = formatINR(inc);
+  document.getElementById('aAvgExp').textContent    = formatINR(exp);
+  document.getElementById('aAvgSav').textContent    = formatINR(sav);
+  document.getElementById('trendChartLabel').textContent = 'Current Prediction Breakdown';
+
+  // Bar chart for current
+  const tCtx = document.getElementById('trendChart').getContext('2d');
+  if (trendChartInst) trendChartInst.destroy();
+  trendChartInst = new Chart(tCtx, {
+    type: 'bar',
+    data: {
+      labels: [['Income'], ['Expenses'], ['Predicted','Savings'], ['Savings','Goal']],
+      datasets: [{ label: 'Current', data: [inc, exp, Math.max(sav,0), goal],
+        backgroundColor: ['rgba(0,102,255,0.7)','rgba(239,68,68,0.7)','rgba(0,212,170,0.7)','rgba(245,158,11,0.7)'],
+        borderColor: ['#0066ff','#ef4444','#00d4aa','#f59e0b'], borderWidth: 1.5, borderRadius: 6 }]
+    },
+    options: { responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:{ y:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#94a3b8', callback:v=>'\u20b9'+(v/1000).toFixed(0)+'k'} }, x:{grid:{display:false}, ticks:{color:'#94a3b8', maxRotation:0}} },
+      animation:{duration:800,easing:'easeOutQuart'} }
+  });
+
+  renderDonut([p]);
+  renderBudgetHealth(p);
+}
+
+// ─ History: trend line across all predictions
+function renderHistoryMode(preds) {
+  const total = preds.length;
+  const avgInc = preds.reduce((s,p)=>s+p.income,0)/total*USD_TO_INR;
+  const avgExp = preds.reduce((s,p)=>s+p.total_expenses,0)/total*USD_TO_INR;
+  const avgSav = preds.reduce((s,p)=>s+p.predicted_savings,0)/total*USD_TO_INR;
+  document.getElementById('aAvgIncome').textContent = formatINR(avgInc);
+  document.getElementById('aAvgExp').textContent    = formatINR(avgExp);
+  document.getElementById('aAvgSav').textContent    = formatINR(avgSav);
+  document.getElementById('trendChartLabel').textContent = 'Savings Trend (last 10)';
+
+  const recent = [...preds].reverse().slice(0,10);
+  const labels = recent.map((_,i)=>`#${i+1}`);
+  const tCtx = document.getElementById('trendChart').getContext('2d');
+  if (trendChartInst) trendChartInst.destroy();
+  trendChartInst = new Chart(tCtx, {
+    type: 'line',
+    data: { labels, datasets: [
+      { label:'Income',   data:recent.map(p=>+(p.income*USD_TO_INR).toFixed(0)),   borderColor:'#0066ff', backgroundColor:'rgba(0,102,255,0.08)', tension:0.4, fill:true, pointRadius:4, pointBackgroundColor:'#0066ff' },
+      { label:'Expenses', data:recent.map(p=>+(p.total_expenses*USD_TO_INR).toFixed(0)), borderColor:'#ef4444', backgroundColor:'rgba(239,68,68,0.06)',  tension:0.4, fill:true, pointRadius:4, pointBackgroundColor:'#ef4444' },
+      { label:'Savings',  data:recent.map(p=>+(p.predicted_savings*USD_TO_INR).toFixed(0)), borderColor:'#00d4aa', backgroundColor:'rgba(0,212,170,0.08)', tension:0.4, fill:true, pointRadius:4, pointBackgroundColor:'#00d4aa' },
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:11},boxWidth:12}}},
+      scales:{ y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#94a3b8',callback:v=>'\u20b9'+(v/1000).toFixed(0)+'k'}}, x:{grid:{display:false},ticks:{color:'#94a3b8'}} },
+      animation:{duration:900,easing:'easeOutQuart'} }
+  });
+
+  renderDonut(preds);
+  renderBudgetHealth(preds[0]);
+}
+
+// ─ Compare: current vs selected past — grouped bar
+function renderCompareMode(preds) {
+  const curr = preds[0];
+  if (!curr) return;
+  const idx = parseInt(document.getElementById('comparePicker').value);
+  const prev = !isNaN(idx) ? preds[idx] : null;
+
+  document.getElementById('aAvgIncome').textContent = formatINR(curr.income * USD_TO_INR);
+  document.getElementById('aAvgExp').textContent    = formatINR(curr.total_expenses * USD_TO_INR);
+  document.getElementById('aAvgSav').textContent    = formatINR(curr.predicted_savings * USD_TO_INR);
+  document.getElementById('trendChartLabel').textContent = prev
+    ? `Current vs #${idx+1} (${new Date(prev.created_at).toLocaleDateString()})`
+    : 'Current — select a past prediction to compare';
+
+  const labels = [['Income'],['Expenses'],['Predicted','Savings'],['Savings','Goal']];
+  const currData = [curr.income, curr.total_expenses, Math.max(curr.predicted_savings,0), curr.savings_goal].map(v=>v*USD_TO_INR);
+  const prevData = prev ? [prev.income, prev.total_expenses, Math.max(prev.predicted_savings,0), prev.savings_goal].map(v=>v*USD_TO_INR) : [];
+
+  const tCtx = document.getElementById('trendChart').getContext('2d');
+  if (trendChartInst) trendChartInst.destroy();
+
+  const datasets = [
+    { label:'Current', data:currData, backgroundColor:'rgba(0,102,255,0.7)', borderColor:'#0066ff', borderWidth:1.5, borderRadius:5 }
+  ];
+  if (prev) datasets.push(
+    { label:`Past #${idx+1}`, data:prevData, backgroundColor:'rgba(0,212,170,0.6)', borderColor:'#00d4aa', borderWidth:1.5, borderRadius:5 }
+  );
+
+  trendChartInst = new Chart(tCtx, {
+    type:'bar',
+    data:{ labels, datasets },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:11},boxWidth:12}}},
+      scales:{ y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#94a3b8',callback:v=>'\u20b9'+(v/1000).toFixed(0)+'k'}}, x:{grid:{display:false},ticks:{color:'#94a3b8',maxRotation:0}} },
+      animation:{duration:800,easing:'easeOutQuart'} }
+  });
+
+  renderDonut(prev ? [curr, prev] : [curr]);
+  renderBudgetHealth(curr, prev);
+}
+
+// ─ Shared: doughnut
+function renderDonut(preds) {
+  const total = preds.length;
+  const avgFixed    = preds.reduce((s,p)=>s+(p.total_expenses*0.6),0)/total*USD_TO_INR;
+  const avgVariable = preds.reduce((s,p)=>s+(p.total_expenses*0.4),0)/total*USD_TO_INR;
+  const avgSav      = Math.max(preds.reduce((s,p)=>s+p.predicted_savings,0)/total*USD_TO_INR, 0);
+  const dCtx = document.getElementById('donutChart').getContext('2d');
+  if (donutChartInst) donutChartInst.destroy();
+  donutChartInst = new Chart(dCtx, {
+    type:'doughnut',
+    data:{ labels:['Fixed Exp','Variable Exp','Savings'],
+      datasets:[{ data:[avgFixed,avgVariable,avgSav],
+        backgroundColor:['rgba(0,102,255,0.75)','rgba(239,68,68,0.75)','rgba(0,212,170,0.75)'],
+        borderColor:['#0066ff','#ef4444','#00d4aa'], borderWidth:1.5, hoverOffset:8 }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'68%',
+      plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:11},boxWidth:12,padding:14}}},
+      animation:{duration:900,easing:'easeOutQuart'} }
+  });
+}
+
+// ─ Shared: budget health bars (optionally show diff vs prev)
+function renderBudgetHealth(curr, prev) {
+  if (!curr) return;
+  const inc  = curr.income * USD_TO_INR;
+  const exp  = curr.total_expenses * USD_TO_INR;
+  const sav  = curr.predicted_savings * USD_TO_INR;
+  const goal = curr.savings_goal * USD_TO_INR;
+  const expRatio  = Math.min((exp/inc)*100, 100);
+  const savRatio  = Math.min((Math.max(sav,0)/inc)*100, 100);
+  const goalRatio = Math.min((Math.max(sav,0)/Math.max(goal,1))*100, 100);
+
+  const diff = (curr, prev, key, divisor) => {
+    if (!prev) return '';
+    const d = ((curr[key] - prev[key]) / Math.max(prev[key],1) * 100);
+    const sign = d >= 0 ? '+' : '';
+    const col  = key === 'total_expenses' ? (d > 0 ? 'var(--danger)' : 'var(--success)') : (d >= 0 ? 'var(--success)' : 'var(--danger)');
+    return `<span style="font-size:0.75rem;color:${col};margin-left:6px">${sign}${d.toFixed(1)}% vs prev</span>`;
+  };
+
+  document.getElementById('budgetHealth').innerHTML = `
+    <div class="bh-row">
+      <div class="bh-label"><span>Expense Ratio${diff(curr,prev,'total_expenses')}</span><span style="color:${expRatio>70?'var(--danger)':'var(--success)'}">${expRatio.toFixed(1)}%</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${expRatio}%;background:${expRatio>70?'linear-gradient(90deg,#ef4444,#f59e0b)':'linear-gradient(90deg,var(--blue),var(--green))'}"></div></div>
+    </div>
+    <div class="bh-row">
+      <div class="bh-label"><span>Savings Rate${diff(curr,prev,'predicted_savings')}</span><span style="color:${savRatio>=20?'var(--success)':'var(--warning)'}">${savRatio.toFixed(1)}%</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${savRatio}%;background:linear-gradient(90deg,var(--blue),var(--green))"></div></div>
+    </div>
+    <div class="bh-row">
+      <div class="bh-label"><span>Goal Achievement</span><span style="color:${goalRatio>=100?'var(--success)':'var(--warning)'}">${goalRatio.toFixed(1)}%</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${goalRatio}%;background:linear-gradient(90deg,#7c3aed,var(--green))"></div></div>
+    </div>
+  `;
 }
 
 // ── Profile ────────────────────────────────────────────────────────
@@ -304,28 +459,153 @@ async function loadProfile() {
   } catch (e) { console.error(e); }
 }
 
-// ── Geocoding (Google API) ─────────────────────────────────────────
-async function resolveAddress() {
-  const address = document.getElementById('geoAddress').value.trim();
-  const resultEl = document.getElementById('geoResult');
-  resultEl.textContent = '';
-  if (!address) {
-    resultEl.textContent = 'Type an address to resolve first.';
-    return;
+// ── File Import ────────────────────────────────────────────────────
+function handleFileImport(input, type) {
+  const file = input.files[0];
+  const status = document.getElementById('importStatus');
+  if (!file) return;
+  status.textContent = 'Reading...';
+
+  const KEYS = ['income', 'fixed_expenses', 'variable_expenses', 'savings_goal', 'lifestyle_score'];
+  const IDS  = ['income', 'fixedExp', 'varExp', 'savingsGoal', 'lifestyle'];
+
+  function applyValues(vals, allRows) {
+    if (!vals || vals.length < 5) { status.textContent = '⚠️ Need 5 values: income, fixed_expenses, variable_expenses, savings_goal, lifestyle_score'; return; }
+    IDS.forEach((id, i) => { document.getElementById(id).value = vals[i]; });
+    document.getElementById('lifestyleLabel').textContent = parseFloat(vals[4]).toFixed(1);
+    fileImported = true;
+    lastFileSnapshot = { name: file.name, rows: allRows || [vals] };
+    ['incomeOptTag','fixedOptTag','varOptTag'].forEach(id => document.getElementById(id).style.display = 'inline');
+    document.getElementById('fileChipName').textContent = file.name;
+    document.getElementById('fileChip').style.display = 'flex';
+    status.textContent = '';
+    input.value = '';
   }
 
-  try {
-    const res = await fetch(`/api/google/geocode?address=${encodeURIComponent(address)}`);
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.error || 'Geocoding failed');
-    resultEl.textContent = `Resolved: ${json.formatted_address} (lat: ${json.location.lat}, lng: ${json.location.lng})`;
-  } catch (e) {
-    resultEl.textContent = 'Geocode error: ' + e.message;
+  // Zero out the three optional fields immediately on file attach
+  document.getElementById('income').value = 0;
+  document.getElementById('fixedExp').value = 0;
+  document.getElementById('varExp').value = 0;
+
+  const reader = new FileReader();
+
+  if (type === 'excel') {
+    reader.onload = e => {
+      try {
+        const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        if (rows.length >= 2 && typeof rows[0][0] === 'string') {
+          const headers = rows[0].map(h => String(h).toLowerCase().trim().replace(/ /g,'_'));
+          const dataRow = rows[1];
+          const vals = KEYS.map(k => { const i = headers.indexOf(k); return i >= 0 ? dataRow[i] : undefined; });
+          if (vals.every(v => v !== undefined)) return applyValues(vals, rows);
+        }
+        applyValues(rows[0], rows);
+      } catch(err) { status.textContent = '⚠️ Could not parse Excel: ' + err.message; }
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    reader.onload = e => {
+      try {
+        const text = e.target.result.trim();
+        const allLines = text.split('\n').map(l => l.trim()).filter(Boolean);
+        const allRows = allLines.map(l => l.split(',').map(v => v.trim()));
+        const commaVals = allRows[0];
+        if (commaVals.length >= 5 && commaVals.every(v => !isNaN(v))) return applyValues(commaVals, allRows);
+        const map = {};
+        allLines.forEach(line => {
+          const [k, v] = line.split(/[=:]/).map(s => s.trim().toLowerCase().replace(/ /g,'_'));
+          if (k && v && !isNaN(v)) map[k] = v;
+        });
+        const vals = KEYS.map(k => map[k]);
+        if (vals.every(v => v !== undefined)) return applyValues(vals, allLines.map(l => [l]));
+        const lines = allLines.filter(l => !isNaN(l));
+        applyValues(lines, allRows);
+      } catch(err) { status.textContent = '⚠️ Could not parse file: ' + err.message; }
+    };
+    reader.readAsText(file);
   }
 }
 
+function cancelFileImport() {
+  fileImported = false;
+  lastFileSnapshot = null;
+  ['incomeOptTag','fixedOptTag','varOptTag'].forEach(id => document.getElementById(id).style.display = 'none');
+  document.getElementById('fileChip').style.display = 'none';
+  document.getElementById('fileChipName').textContent = '';
+  document.getElementById('importStatus').textContent = '';
+  document.getElementById('importExcel').value = '';
+  document.getElementById('importNote').value = '';
+  ['income','fixedExp','varExp','savingsGoal'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('lifestyle').value = 5;
+  document.getElementById('lifestyleLabel').textContent = '5.0';
+}
 
-// ── PDF Download ───────────────────────────────────────────────────
+
+// ── File Viewer ────────────────────────────────────────────────────
+function openFileViewer(name, rawData) {
+  document.getElementById('fileViewerName').textContent = name;
+  const table = document.getElementById('fileViewerTable');
+  table.innerHTML = '';
+
+  let rows = [];
+  try { rows = typeof rawData === 'string' ? JSON.parse(rawData) : (rawData || []); } catch(e) { rows = []; }
+
+  if (!rows.length) {
+    table.innerHTML = '<tr><td style="color:var(--text-dim);padding:20px">No data available.</td></tr>';
+  } else {
+    const isNested = Array.isArray(rows[0]);
+    if (isNested) {
+      rows.forEach((row, ri) => {
+        const tr = document.createElement('tr');
+        row.forEach(cell => {
+          const td = document.createElement(ri === 0 ? 'th' : 'td');
+          td.textContent = cell ?? '';
+          td.style.cssText = ri === 0
+            ? 'padding:8px 12px;color:var(--text-dim);font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--card-border);white-space:nowrap'
+            : 'padding:8px 12px;color:var(--text-muted);font-size:0.83rem;border-bottom:1px solid rgba(255,255,255,0.03)';
+          tr.appendChild(td);
+        });
+        table.appendChild(tr);
+      });
+    } else {
+      // flat array of strings (note/txt lines)
+      const hdr = document.createElement('tr');
+      ['Line', 'Content'].forEach(h => {
+        const th = document.createElement('th');
+        th.textContent = h;
+        th.style.cssText = 'padding:8px 12px;color:var(--text-dim);font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--card-border)';
+        hdr.appendChild(th);
+      });
+      table.appendChild(hdr);
+      rows.forEach((row, i) => {
+        const tr = document.createElement('tr');
+        [i + 1, Array.isArray(row) ? row.join(', ') : row].forEach(val => {
+          const td = document.createElement('td');
+          td.textContent = val;
+          td.style.cssText = 'padding:8px 12px;color:var(--text-muted);font-size:0.83rem;border-bottom:1px solid rgba(255,255,255,0.03)';
+          tr.appendChild(td);
+        });
+        table.appendChild(tr);
+      });
+    }
+  }
+
+  const ov = document.getElementById('fileViewerOverlay');
+  ov.style.display = 'flex';
+}
+
+function closeFileViewer() {
+  document.getElementById('fileViewerOverlay').style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('fileViewerOverlay')?.addEventListener('click', e => {
+    if (e.target.id === 'fileViewerOverlay') closeFileViewer();
+  });
+});
+
 async function downloadReport() {
   if (!lastResult) return;
   const income = parseFloat(document.getElementById('income').value);
@@ -335,20 +615,13 @@ async function downloadReport() {
   const lifestyle = parseFloat(document.getElementById('lifestyle').value);
 
   try {
-    const predictionInr = {
-      ...lastResult,
-      predicted_savings: lastResult.predicted_savings * USD_TO_INR,
-      lr_prediction: lastResult.lr_prediction * USD_TO_INR,
-      rf_prediction: lastResult.rf_prediction * USD_TO_INR
-    };
-
     const res = await fetch(`${API}/predictions/report`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token() },
       body: JSON.stringify({
         input: { income, fixed_expenses: fixed, variable_expenses: variable,
                  total_expenses: fixed + variable, savings_goal: goal, lifestyle_score: lifestyle },
-        prediction: predictionInr,
+        prediction: lastResult,
         insights: lastResult.insights
       })
     });
@@ -372,10 +645,16 @@ function resetForm() {
   document.getElementById('resultEmpty').style.display = 'block';
   document.getElementById('resultCard').classList.add('result-hidden');
   document.getElementById('insightsSection').style.display = 'none';
-  document.getElementById('modelCompare').style.display = 'none';
+  fileImported = false;
+  lastFileSnapshot = null;
+  ['incomeOptTag','fixedOptTag','varOptTag'].forEach(id => document.getElementById(id).style.display = 'none');
+  document.getElementById('fileChip').style.display = 'none';
+  document.getElementById('fileChipName').textContent = '';
+  document.getElementById('importStatus').textContent = '';
+  document.getElementById('importExcel').value = '';
+  document.getElementById('importNote').value = '';
   lastResult = null;
   if (resultChartInst) { resultChartInst.destroy(); resultChartInst = null; }
-  if (compareChartInst) { compareChartInst.destroy(); compareChartInst = null; }
 }
 
 // ── Chatbot ────────────────────────────────────────────────────────

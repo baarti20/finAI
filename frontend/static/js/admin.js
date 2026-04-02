@@ -2,6 +2,12 @@
 const API = '/api';
 const token = () => localStorage.getItem('finai_token');
 
+const USD_TO_INR = 1;
+function formatINR(amount) {
+  const abs = Math.abs(amount);
+  return (amount < 0 ? '-₹' : '₹') + abs.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+}
+
 // ── Guard: admin only ──────────────────────────────────────────────
 (function guard() {
   const u = JSON.parse(localStorage.getItem('finai_user') || '{}');
@@ -27,6 +33,8 @@ function showPanel(name) {
 }
 
 // ── Stats & Overview ───────────────────────────────────────────────
+let adminModelMetrics = {};
+
 async function loadStats() {
   try {
     const res = await fetch(`${API}/admin/stats`, {
@@ -37,18 +45,18 @@ async function loadStats() {
 
     document.getElementById('statUsers').textContent = data.total_users;
     document.getElementById('statPreds').textContent = data.total_predictions;
-    document.getElementById('statAvg').textContent = '$' + (data.avg_predicted_savings || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
+    document.getElementById('statAvg').textContent = formatINR(data.avg_predicted_savings || 0);
     document.getElementById('statModel').textContent = (data.best_model || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
     const m = data.model_metrics || {};
     const lr = m.linear_regression || {};
     const rf = m.random_forest || {};
     document.getElementById('lrR2').textContent = lr.r2 ?? '—';
-    document.getElementById('lrMAE').textContent = lr.mae ? '$' + lr.mae.toLocaleString() : '—';
-    document.getElementById('lrRMSE').textContent = lr.rmse ? '$' + lr.rmse.toLocaleString() : '—';
+    document.getElementById('lrMAE').textContent = lr.mae ? formatINR(lr.mae) : '—';
+    document.getElementById('lrRMSE').textContent = lr.rmse ? formatINR(lr.rmse) : '—';
     document.getElementById('rfR2').textContent = rf.r2 ?? '—';
-    document.getElementById('rfMAE').textContent = rf.mae ? '$' + rf.mae.toLocaleString() : '—';
-    document.getElementById('rfRMSE').textContent = rf.rmse ? '$' + rf.rmse.toLocaleString() : '—';
+    document.getElementById('rfMAE').textContent = rf.mae ? formatINR(rf.mae) : '—';
+    document.getElementById('rfRMSE').textContent = rf.rmse ? formatINR(rf.rmse) : '—';
 
     // Feature importances
     const fi = data.feature_importances || {};
@@ -67,6 +75,9 @@ async function loadStats() {
       </div>
     `).join('');
 
+    // Store metrics for model comparison
+    adminModelMetrics = m;
+
     // Chart
     renderAdminChart(lr, rf);
   } catch (e) { console.error('Stats load failed', e); }
@@ -79,7 +90,7 @@ function renderAdminChart(lr, rf) {
   adminChartInst = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['R² Score (×10)', 'MAE ($k, inverted)', 'RMSE ($k, inverted)'],
+      labels: ['R² Score (×10)', 'MAE (₹k, inverted)', 'RMSE (₹k, inverted)'],
       datasets: [
         {
           label: 'Linear Regression',
@@ -142,6 +153,8 @@ async function loadUsers() {
 }
 
 // ── Predictions Log ────────────────────────────────────────────────
+let allPredictions = [];
+
 async function loadPredictions() {
   try {
     const res = await fetch(`${API}/admin/predictions`, {
@@ -149,27 +162,153 @@ async function loadPredictions() {
     });
     const data = await res.json();
     const tbody = document.getElementById('predsBody');
-    const preds = data.predictions || [];
-    if (!preds.length) {
+    allPredictions = data.predictions || [];
+    if (!allPredictions.length) {
       tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-dim);padding:40px">No predictions yet.</td></tr>';
       return;
     }
-    tbody.innerHTML = preds.map((p, i) => `
+    tbody.innerHTML = allPredictions.map((p, i) => `
       <tr>
         <td style="color:var(--text-dim)">${i + 1}</td>
         <td style="font-weight:500">${p.username}</td>
         <td>${new Date(p.created_at).toLocaleDateString()}</td>
-        <td>$${p.income.toLocaleString('en-US', { maximumFractionDigits: 0 })}</td>
-        <td>$${p.total_expenses.toLocaleString('en-US', { maximumFractionDigits: 0 })}</td>
-        <td>$${p.savings_goal.toLocaleString('en-US', { maximumFractionDigits: 0 })}</td>
+        <td>${formatINR(p.income)}</td>
+        <td>${formatINR(p.total_expenses)}</td>
+        <td>${formatINR(p.savings_goal)}</td>
         <td style="color:${p.predicted_savings >= 0 ? 'var(--success)' : 'var(--danger)'}">
-          $${Math.abs(p.predicted_savings).toLocaleString('en-US', { maximumFractionDigits: 0 })}
+          ${formatINR(p.predicted_savings)}
         </td>
         <td><span class="status-badge user" style="font-size:0.7rem">${p.model_used.replace(/_/g, ' ')}</span></td>
+        <td>${p.file_name
+          ? `<button onclick='openFileViewer(${JSON.stringify(p.file_name)}, ${JSON.stringify(p.file_data)})'
+               style="background:rgba(0,212,170,0.1);border:1px solid rgba(0,212,170,0.3);color:var(--green);border-radius:6px;padding:3px 10px;font-size:0.75rem;cursor:pointer">
+               📎 ${p.file_name}</button>`
+          : '<span style="color:var(--text-dim);font-size:0.78rem">—</span>'}
+        </td>
       </tr>
     `).join('');
+
+    // Populate user dropdown for model comparison
+    const select = document.getElementById('compareUserSelect');
+    const seen = new Set();
+    allPredictions.forEach(p => {
+      if (!seen.has(p.username)) {
+        seen.add(p.username);
+        const opt = document.createElement('option');
+        opt.value = p.username;
+        opt.textContent = p.username;
+        select.appendChild(opt);
+      }
+    });
   } catch (e) { console.error('Preds load failed', e); }
 }
+
+let userCompareChartInst = null;
+function renderUserModelCompare() {
+  const username = document.getElementById('compareUserSelect').value;
+  const empty = document.getElementById('userCompareEmpty');
+  const content = document.getElementById('userCompareContent');
+  if (!username) { empty.style.display = 'block'; content.style.display = 'none'; return; }
+
+  const pred = allPredictions.find(p => p.username === username);
+  if (!pred) return;
+
+  empty.style.display = 'none';
+  content.style.display = 'block';
+
+  const fmt = v => v != null ? formatINR(v) : '—';
+  document.getElementById('ucLrPred').textContent = fmt(pred.lr_prediction);
+  document.getElementById('ucRfPred').textContent = fmt(pred.rf_prediction);
+  document.getElementById('ucModelUsed').textContent = (pred.model_used || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+  const m = adminModelMetrics;
+  const best = m.best === 'linear_regression' ? m.linear_regression : m.random_forest;
+  document.getElementById('ucR2').textContent = best?.r2 ?? '—';
+  document.getElementById('ucMAE').textContent = best?.mae ? formatINR(best.mae) : '—';
+  document.getElementById('ucRMSE').textContent = best?.rmse ? formatINR(best.rmse) : '—';
+
+  const lr = m.linear_regression || {};
+  const rf = m.random_forest || {};
+  const ctx = document.getElementById('userCompareChart').getContext('2d');
+  if (userCompareChartInst) userCompareChartInst.destroy();
+  userCompareChartInst = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: ['R²', 'Low MAE', 'Low RMSE', 'Speed', 'Interpretability'],
+      datasets: [
+        { label: 'Linear Regression', data: [(lr.r2||0)*10, 10-(lr.mae||0)/2000, 10-(lr.rmse||0)/2000, 9, 9], borderColor: '#0066ff', backgroundColor: 'rgba(0,102,255,0.1)', pointBackgroundColor: '#0066ff' },
+        { label: 'Random Forest',     data: [(rf.r2||0)*10, 10-(rf.mae||0)/2000, 10-(rf.rmse||0)/2000, 6, 5], borderColor: '#00d4aa', backgroundColor: 'rgba(0,212,170,0.1)', pointBackgroundColor: '#00d4aa' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } },
+      scales: { r: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#64748b', stepSize: 2, backdropColor: 'transparent' }, pointLabels: { color: '#94a3b8', font: { size: 11 } }, min: 0, max: 10 } }
+    }
+  });
+}
+
+// ── File Viewer ────────────────────────────────────────────────────
+function openFileViewer(name, rawData) {
+  document.getElementById('fileViewerName').textContent = name;
+  const table = document.getElementById('fileViewerTable');
+  table.innerHTML = '';
+
+  let rows = [];
+  try { rows = typeof rawData === 'string' ? JSON.parse(rawData) : (rawData || []); } catch(e) { rows = []; }
+
+  if (!rows.length) {
+    table.innerHTML = '<tr><td style="color:var(--text-dim);padding:20px">No data available.</td></tr>';
+  } else {
+    const isNested = Array.isArray(rows[0]);
+    if (isNested) {
+      rows.forEach((row, ri) => {
+        const tr = document.createElement('tr');
+        row.forEach(cell => {
+          const td = document.createElement(ri === 0 ? 'th' : 'td');
+          td.textContent = cell ?? '';
+          td.style.cssText = ri === 0
+            ? 'padding:8px 12px;color:var(--text-dim);font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--card-border);white-space:nowrap'
+            : 'padding:8px 12px;color:var(--text-muted);font-size:0.83rem;border-bottom:1px solid rgba(255,255,255,0.03)';
+          tr.appendChild(td);
+        });
+        table.appendChild(tr);
+      });
+    } else {
+      const hdr = document.createElement('tr');
+      ['Line', 'Content'].forEach(h => {
+        const th = document.createElement('th');
+        th.textContent = h;
+        th.style.cssText = 'padding:8px 12px;color:var(--text-dim);font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--card-border)';
+        hdr.appendChild(th);
+      });
+      table.appendChild(hdr);
+      rows.forEach((row, i) => {
+        const tr = document.createElement('tr');
+        [i + 1, Array.isArray(row) ? row.join(', ') : row].forEach(val => {
+          const td = document.createElement('td');
+          td.textContent = val;
+          td.style.cssText = 'padding:8px 12px;color:var(--text-muted);font-size:0.83rem;border-bottom:1px solid rgba(255,255,255,0.03)';
+          tr.appendChild(td);
+        });
+        table.appendChild(tr);
+      });
+    }
+  }
+
+  const ov = document.getElementById('fileViewerOverlay');
+  ov.style.display = 'flex';
+}
+
+function closeFileViewer() {
+  document.getElementById('fileViewerOverlay').style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('fileViewerOverlay')?.addEventListener('click', e => {
+    if (e.target.id === 'fileViewerOverlay') closeFileViewer();
+  });
+});
 
 // ── Retrain ────────────────────────────────────────────────────────
 async function retrainModel() {
@@ -189,8 +328,10 @@ async function retrainModel() {
     const data = await res.json();
     result.style.display = 'block';
     if (res.ok) {
-      result.innerHTML = `<div class="success-msg show">✅ ${data.message}</div>`;
-      await loadStats();
+      result.innerHTML = `<div class="success-msg show">✅ ${data.message} — Redirecting to dataset...</div>`;
+      setTimeout(() => {
+        window.open('https://github.com/baarti20/finAI/blob/main/data/financial_dataset.csv', '_blank');
+      }, 1200);
     } else {
       result.innerHTML = `<div class="error-msg show">❌ ${data.error}</div>`;
     }

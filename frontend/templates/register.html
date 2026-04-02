@@ -33,15 +33,36 @@
 
     <div class="form-group">
       <label>Username</label>
-      <input type="text" id="username" class="form-control" placeholder="johndoe" autocomplete="username"/>
+      <input type="text" id="username" class="form-control" placeholder="johndoe" autocomplete="username" oninput="validateField(this,'username')"/>
+      <div class="field-hint" id="usernameHint"></div>
     </div>
     <div class="form-group">
       <label>Email Address</label>
-      <input type="email" id="email" class="form-control" placeholder="you@email.com" autocomplete="email"/>
+      <input type="email" id="email" class="form-control" placeholder="you@email.com" autocomplete="email" oninput="validateField(this,'email')"/>
+      <div class="field-hint" id="emailHint"></div>
     </div>
     <div class="form-group">
       <label>Password <span style="color:var(--text-dim);font-size:0.8rem">(min 6 chars)</span></label>
-      <input type="password" id="password" class="form-control" placeholder="••••••••" autocomplete="new-password"/>
+      <div style="position:relative">
+        <input type="password" id="password" class="form-control" placeholder="••••••••" autocomplete="new-password" oninput="validateField(this,'password')"/>
+        <button type="button" onclick="togglePwd('password',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:1rem">👁</button>
+      </div>
+      <div class="pwd-strength-bar"><div id="pwdStrengthFill"></div></div>
+      <div class="field-hint" id="passwordHint"></div>
+    </div>
+    <div class="form-group">
+      <label>Confirm Password</label>
+      <div style="position:relative">
+        <input type="password" id="confirmPassword" class="form-control" placeholder="••••••••" autocomplete="new-password" oninput="validateField(this,'confirm')"/>
+        <button type="button" onclick="togglePwd('confirmPassword',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:1rem">👁</button>
+      </div>
+      <div class="field-hint" id="confirmHint"></div>
+    </div>
+
+    <div class="form-group">
+      <label>Date of Birth <span style="color:var(--text-dim);font-size:0.8rem">(used to recover your account)</span></label>
+      <input type="date" id="dob" class="form-control" autocomplete="bday"/>
+      <div class="field-hint" id="dobHint"></div>
     </div>
 
     <button class="btn-primary btn-full" id="registerBtn" onclick="doRegister()">

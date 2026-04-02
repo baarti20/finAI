@@ -115,12 +115,43 @@
         <div style="overflow-x:auto">
           <table class="history-table">
             <thead>
-              <tr><th>#</th><th>User</th><th>Date</th><th>Income</th><th>Expenses</th><th>Goal</th><th>Predicted</th><th>Model</th></tr>
+              <tr><th>#</th><th>User</th><th>Date</th><th>Income</th><th>Expenses</th><th>Goal</th><th>Predicted</th><th>Model</th><th>File</th></tr>
             </thead>
             <tbody id="predsBody">
               <tr><td colspan="8" style="text-align:center;color:var(--text-dim);padding:40px">Loading...</td></tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- Per-user Model Comparison -->
+      <div style="margin-top:24px">
+        <div class="panel-card">
+          <div class="panel-card-title"><span>🤖</span> Model Comparison — Per User</div>
+          <div style="margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <label style="font-size:0.85rem;color:var(--text-muted)">Select User:</label>
+            <select id="compareUserSelect" class="form-control" style="width:auto;min-width:180px" onchange="renderUserModelCompare()">
+              <option value="">— choose a user —</option>
+            </select>
+          </div>
+          <div id="userCompareEmpty" style="color:var(--text-dim);font-size:0.9rem;padding:12px 0">Select a user above to see their LR vs RF prediction breakdown.</div>
+          <div id="userCompareContent" style="display:none">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+              <div>
+                <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px">Latest Prediction — Both Models</div>
+                <div class="metric-pair"><span class="metric-label">Linear Regression</span><span class="metric-value" id="ucLrPred">—</span></div>
+                <div class="metric-pair"><span class="metric-label">Random Forest</span><span class="metric-value" id="ucRfPred">—</span></div>
+                <div class="metric-pair"><span class="metric-label">Model Used</span><span class="metric-value" id="ucModelUsed">—</span></div>
+              </div>
+              <div>
+                <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px">Model Performance (Test Set)</div>
+                <div class="metric-pair"><span class="metric-label">Best Model R²</span><span class="metric-value" id="ucR2">—</span></div>
+                <div class="metric-pair"><span class="metric-label">MAE</span><span class="metric-value" id="ucMAE">—</span></div>
+                <div class="metric-pair"><span class="metric-label">RMSE</span><span class="metric-value" id="ucRMSE">—</span></div>
+              </div>
+            </div>
+            <div style="height:220px"><canvas id="userCompareChart"></canvas></div>
+          </div>
         </div>
       </div>
     </div>
@@ -159,6 +190,22 @@
     </div>
 
   </main>
+</div>
+
+<!-- File Viewer Modal -->
+<div id="fileViewerOverlay" style="display:none;position:fixed;inset:0;background:rgba(4,8,16,0.88);backdrop-filter:blur(6px);z-index:2000;align-items:center;justify-content:center">
+  <div style="background:var(--bg2);border:1px solid var(--card-border);border-radius:20px;padding:32px;width:100%;max-width:640px;margin:20px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,0.5);animation:fade-up 0.3s ease">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div>
+        <h2 style="font-family:var(--font-display);font-size:1.2rem;font-weight:800">📎 Attached File</h2>
+        <div id="fileViewerName" style="font-size:0.82rem;color:var(--green);margin-top:4px"></div>
+      </div>
+      <button onclick="closeFileViewer()" style="background:none;border:none;color:var(--text-dim);font-size:1.3rem;cursor:pointer">✕</button>
+    </div>
+    <div style="overflow:auto;flex:1">
+      <table id="fileViewerTable" style="width:100%;border-collapse:collapse;font-size:0.83rem"></table>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>

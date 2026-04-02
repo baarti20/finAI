@@ -38,6 +38,9 @@
       <a class="sidebar-link" onclick="showPanel('history')">
         <span class="sidebar-icon">📋</span> History
       </a>
+      <a class="sidebar-link" onclick="showPanel('analytics')">
+        <span class="sidebar-icon">📈</span> Analytics
+      </a>
       <a class="sidebar-link" onclick="showPanel('profile')">
         <span class="sidebar-icon">👤</span> Profile
       </a>
@@ -61,26 +64,26 @@
           <div class="predict-form">
             <div class="form-row">
               <div class="form-group">
-                <label>Annual Income</label>
+                <label>Annual Income <span id="incomeOptTag" style="display:none;font-size:0.72rem;color:var(--green);font-weight:500;margin-left:4px">· from file</span></label>
                 <div class="input-with-icon">
                   <span class="input-prefix">$</span>
-                  <input type="number" id="income" class="form-control" placeholder="65000" min="1"/>
+                  <input type="number" id="income" class="form-control" placeholder="65000 (optional if file attached)" min="1"/>
                 </div>
               </div>
               <div class="form-group">
-                <label>Fixed Expenses / yr</label>
+                <label>Fixed Expenses / yr <span id="fixedOptTag" style="display:none;font-size:0.72rem;color:var(--green);font-weight:500;margin-left:4px">· from file</span></label>
                 <div class="input-with-icon">
                   <span class="input-prefix">$</span>
-                  <input type="number" id="fixedExp" class="form-control" placeholder="18000" min="0"/>
+                  <input type="number" id="fixedExp" class="form-control" placeholder="18000 (optional if file attached)" min="0"/>
                 </div>
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Variable Expenses / yr</label>
+                <label>Variable Expenses / yr <span id="varOptTag" style="display:none;font-size:0.72rem;color:var(--green);font-weight:500;margin-left:4px">· from file</span></label>
                 <div class="input-with-icon">
                   <span class="input-prefix">$</span>
-                  <input type="number" id="varExp" class="form-control" placeholder="12000" min="0"/>
+                  <input type="number" id="varExp" class="form-control" placeholder="12000 (optional if file attached)" min="0"/>
                 </div>
               </div>
               <div class="form-group">
@@ -106,16 +109,30 @@
               <button class="admin-tab" onclick="fillSample('mid')" style="padding:4px 12px;font-size:0.78rem">Middle Class</button>
               <button class="admin-tab" onclick="fillSample('high')" style="padding:4px 12px;font-size:0.78rem">High Earner</button>
             </div>
-            <div class="form-row" style="margin-top:8px;">
-              <div class="form-group" style="flex:0.7;">
-                <label>Address (optional)</label>
-                <input type="text" id="geoAddress" class="form-control" placeholder="e.g. 1600 Amphitheatre Parkway, Mountain View" />
-              </div>
-              <button class="btn-outline" style="flex:0.3;height:44px;align-self:flex-end" onclick="resolveAddress()">Find coords</button>
-            </div>
-            <div id="geoResult" style="margin-top:6px;color:var(--text-dim);font-size:0.82rem"></div>
 
-            <button class="btn-primary btn-full" id="predictBtn" onclick="runPrediction()" style="margin-top:8px">
+            <!-- File Import -->
+            <div style="margin-top:12px;padding:12px;border:1.5px dashed rgba(0,102,255,0.35);border-radius:10px;background:rgba(0,102,255,0.04)">
+              <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:8px">📂 Import from file — auto-fills the form</div>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <label class="btn-outline" style="padding:7px 14px;font-size:0.82rem;cursor:pointer;margin:0">
+                  📊 Excel (.xlsx)
+                  <input type="file" id="importExcel" accept=".xlsx,.xls" style="display:none" onchange="handleFileImport(this,'excel')"/>
+                </label>
+                <label class="btn-outline" style="padding:7px 14px;font-size:0.82rem;cursor:pointer;margin:0">
+                  📝 Notes (.txt / .csv)
+                  <input type="file" id="importNote" accept=".txt,.csv" style="display:none" onchange="handleFileImport(this,'text')"/>
+                </label>
+              </div>
+              <div id="fileChip" style="display:none;margin-top:8px;align-items:center;gap:8px;padding:6px 10px;background:rgba(0,212,170,0.1);border:1px solid rgba(0,212,170,0.3);border-radius:8px;width:fit-content">
+                <span style="font-size:0.85rem">📎</span>
+                <span id="fileChipName" style="font-size:0.82rem;color:var(--green);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+                <button onclick="cancelFileImport()" title="Remove file" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:0.9rem;padding:0 2px;line-height:1" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-dim)'">✕</button>
+              </div>
+              <div id="importStatus" style="font-size:0.8rem;color:var(--text-dim);margin-top:4px"></div>
+              <div style="font-size:0.75rem;color:var(--text-dim);margin-top:6px">Excel: first row = headers (income, fixed_expenses, variable_expenses, savings_goal, lifestyle_score), second row = values.<br/>Notes/CSV: one value per line or comma-separated in same order.</div>
+            </div>
+
+            <button class="btn-primary btn-full" id="predictBtn" onclick="runPrediction()" style="margin-top:12px">
               <span class="loading-spin" id="predictSpin"></span>
               <span id="predictBtnText">✨ Run AI Prediction</span>
             </button>
@@ -152,49 +169,75 @@
         </div>
       </div>
 
-      <!-- Model Comparison -->
-      <div id="modelCompare" style="display:none;margin-top:20px;">
-        <div class="panel-card">
-          <div class="panel-card-title"><span>📊</span> Model Comparison</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-            <div>
-              <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px">Both Predictions</div>
-              <div class="metric-pair">
-                <span class="metric-label">Linear Regression</span>
-                <span class="metric-value" id="lrPred">—</span>
-              </div>
-              <div class="metric-pair">
-                <span class="metric-label">Random Forest</span>
-                <span class="metric-value" id="rfPred">—</span>
-              </div>
-            </div>
-            <div>
-              <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px">Model Performance (Test Set)</div>
-              <div class="metric-pair">
-                <span class="metric-label">Best Model R²</span>
-                <span class="metric-value" id="metricR2">—</span>
-              </div>
-              <div class="metric-pair">
-                <span class="metric-label">MAE</span>
-                <span class="metric-value" id="metricMAE">—</span>
-              </div>
-              <div class="metric-pair">
-                <span class="metric-label">RMSE</span>
-                <span class="metric-value" id="metricRMSE">—</span>
-              </div>
-            </div>
-          </div>
-          <div style="height:180px;margin-top:20px">
-            <canvas id="compareChart"></canvas>
-          </div>
-        </div>
-      </div>
-
       <!-- Insights -->
       <div id="insightsSection" style="display:none;margin-top:20px;">
         <div class="panel-card">
           <div class="panel-card-title"><span>💡</span> AI Financial Insights</div>
           <div id="insightsList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ANALYTICS PANEL ── -->
+    <div class="dash-panel" id="panel-analytics">
+      <div class="dash-header">
+        <h1>Analytics <span style="font-size:1.5rem">📈</span></h1>
+        <p>Visual breakdown of your financial predictions and trends.</p>
+      </div>
+
+      <!-- Mode toggle -->
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+        <div class="admin-tabs" style="margin-bottom:0">
+          <button class="admin-tab active" id="modeBtn-current" onclick="setAnalyticsMode('current')">⚡ Current</button>
+          <button class="admin-tab" id="modeBtn-history" onclick="setAnalyticsMode('history')">📋 History</button>
+          <button class="admin-tab" id="modeBtn-compare" onclick="setAnalyticsMode('compare')">⚖️ Compare</button>
+        </div>
+        <!-- Compare: pick a past prediction -->
+        <div id="comparePickerWrap" style="display:none;align-items:center;gap:8px">
+          <span style="font-size:0.82rem;color:var(--text-dim)">vs</span>
+          <select id="comparePicker" class="form-control" style="width:auto;min-width:160px;padding:6px 12px;font-size:0.82rem" onchange="refreshAnalytics()">
+            <option value="">— pick a past prediction —</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="analytics-stats">
+        <div class="analytics-stat-card">
+          <div class="asc-icon" style="background:rgba(0,102,255,0.15)">💰</div>
+          <div><div class="asc-label">Income</div><div class="asc-value" id="aAvgIncome">—</div></div>
+        </div>
+        <div class="analytics-stat-card">
+          <div class="asc-icon" style="background:rgba(239,68,68,0.15)">💸</div>
+          <div><div class="asc-label">Expenses</div><div class="asc-value" id="aAvgExp">—</div></div>
+        </div>
+        <div class="analytics-stat-card">
+          <div class="asc-icon" style="background:rgba(16,185,129,0.15)">💹</div>
+          <div><div class="asc-label">Predicted Savings</div><div class="asc-value" id="aAvgSav">—</div></div>
+        </div>
+        <div class="analytics-stat-card">
+          <div class="asc-icon" style="background:rgba(245,158,11,0.15)">🎯</div>
+          <div><div class="asc-label">Total Predictions</div><div class="asc-value" id="aTotalPred">—</div></div>
+        </div>
+      </div>
+
+      <!-- Charts row -->
+      <div class="analytics-charts">
+        <div class="panel-card" style="flex:2">
+          <div class="panel-card-title"><span id="trendChartTitle">📉</span> <span id="trendChartLabel">Savings Trend</span></div>
+          <div style="height:260px"><canvas id="trendChart"></canvas></div>
+        </div>
+        <div class="panel-card" style="flex:1">
+          <div class="panel-card-title"><span>🧩</span> Expense Breakdown</div>
+          <div style="height:260px"><canvas id="donutChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Budget health -->
+      <div class="panel-card" style="margin-top:20px">
+        <div class="panel-card-title"><span>🏦</span> Budget Health</div>
+        <div id="budgetHealth">
+          <div style="color:var(--text-dim);font-size:0.9rem;padding:20px 0">Run a prediction to see your budget health breakdown.</div>
         </div>
       </div>
     </div>
@@ -217,6 +260,7 @@
                 <th>Savings Goal</th>
                 <th>Predicted Savings</th>
                 <th>Model</th>
+                <th>File</th>
               </tr>
             </thead>
             <tbody id="historyBody">
@@ -278,7 +322,24 @@
   </div>
 </div>
 
+<!-- File Viewer Modal -->
+<div id="fileViewerOverlay" style="display:none;position:fixed;inset:0;background:rgba(4,8,16,0.88);backdrop-filter:blur(6px);z-index:2000;align-items:center;justify-content:center">
+  <div style="background:var(--bg2);border:1px solid var(--card-border);border-radius:20px;padding:32px;width:100%;max-width:640px;margin:20px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,0.5);animation:fade-up 0.3s ease">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div>
+        <h2 style="font-family:var(--font-display);font-size:1.2rem;font-weight:800">📎 Attached File</h2>
+        <div id="fileViewerName" style="font-size:0.82rem;color:var(--green);margin-top:4px"></div>
+      </div>
+      <button onclick="closeFileViewer()" style="background:none;border:none;color:var(--text-dim);font-size:1.3rem;cursor:pointer">✕</button>
+    </div>
+    <div style="overflow:auto;flex:1">
+      <table id="fileViewerTable" style="width:100%;border-collapse:collapse;font-size:0.83rem"></table>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="/static/js/dashboard.js"></script>
 </body>
 </html>
