@@ -142,8 +142,12 @@ async function loadUsers() {
     tbody.innerHTML = users.map(u => `
       <tr>
         <td style="color:var(--text-dim)">${u.id}</td>
-        <td style="font-weight:500">${u.username}</td>
+        <td style="font-weight:500">${u.full_name || '—'}</td>
+        <td>${u.username}</td>
         <td style="color:var(--text-muted)">${u.email}</td>
+        <td style="color:var(--text-muted)">${u.phone || '—'}</td>
+        <td style="color:var(--text-muted)">${u.gender || '—'}</td>
+        <td style="color:var(--text-muted)">${u.city || '—'}</td>
         <td><span class="status-badge ${u.role}">${u.role}</span></td>
         <td>${u.created_at ? new Date(u.created_at).toLocaleDateString() : '—'}</td>
         <td style="color:var(--text-dim)">${u.last_login ? new Date(u.last_login).toLocaleDateString() : 'Never'}</td>

@@ -22,7 +22,11 @@ def init_db():
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
+            full_name TEXT,
             email TEXT UNIQUE NOT NULL,
+            phone TEXT,
+            gender TEXT,
+            city TEXT,
             password_hash TEXT NOT NULL,
             role TEXT DEFAULT 'user',
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
@@ -71,19 +75,20 @@ def verify_password(password: str, hashed: str) -> bool:
     return hash_password(password) == hashed
 
 
-def create_user(username, email, password, dob=None):
+def create_user(username, email, password, dob=None, full_name=None, phone=None, gender=None, city=None):
     conn = get_db()
     c = conn.cursor()
-    # Add dob column if missing (migration safety)
-    try:
-        c.execute("ALTER TABLE users ADD COLUMN dob TEXT")
-        conn.commit()
-    except Exception:
-        pass
+    # Migration safety — add new columns if missing
+    for col, typ in [('dob','TEXT'),('full_name','TEXT'),('phone','TEXT'),('gender','TEXT'),('city','TEXT')]:
+        try:
+            c.execute(f'ALTER TABLE users ADD COLUMN {col} {typ}')
+            conn.commit()
+        except Exception:
+            pass
     try:
         c.execute(
-            "INSERT INTO users (username, email, password_hash, dob) VALUES (?, ?, ?, ?)",
-            (username, email, hash_password(password), dob)
+            "INSERT INTO users (username, email, password_hash, dob, full_name, phone, gender, city) VALUES (?,?,?,?,?,?,?,?)",
+            (username, email, hash_password(password), dob, full_name, phone, gender, city)
         )
         conn.commit()
         return c.lastrowid
@@ -166,7 +171,7 @@ def get_user_predictions(user_id, limit=20):
 def get_all_users():
     conn = get_db()
     rows = conn.execute(
-        "SELECT id, username, email, role, created_at, last_login FROM users ORDER BY id"
+        "SELECT id, username, full_name, email, phone, gender, city, role, created_at, last_login FROM users ORDER BY id"
     ).fetchall()
     conn.close()
     return [dict(r) for r in rows]

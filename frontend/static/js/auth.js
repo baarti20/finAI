@@ -78,6 +78,12 @@ function validateField(input, type) {
   const hints = { username: 'usernameHint', email: 'emailHint', password: 'passwordHint', confirm: 'confirmHint' };
   const hint = document.getElementById(hints[type]);
 
+  if (type === 'fullName') {
+    const v = input.value.trim();
+    if (!v) return setFieldState(input, hint, '', false);
+    const ok = v.length >= 2;
+    setFieldState(input, hint, ok ? '✓ Looks good' : 'Enter your full name', ok);
+  }
   if (type === 'username') {
     const v = input.value.trim();
     if (!v) return setFieldState(input, hint, '', false);
@@ -100,6 +106,12 @@ function validateField(input, type) {
     // Re-validate confirm if already filled
     const conf = document.getElementById('confirmPassword');
     if (conf && conf.value) validateField(conf, 'confirm');
+  }
+  if (type === 'phone') {
+    const v = input.value.trim();
+    if (!v) return setFieldState(input, hint, '', false);
+    const ok = /^[0-9]{10}$/.test(v);
+    setFieldState(input, hint, ok ? '✓ Valid phone number' : 'Enter a 10-digit phone number', ok);
   }
   if (type === 'confirm') {
     const pwd = document.getElementById('password')?.value;
@@ -141,34 +153,42 @@ async function doLogin() {
 
 // ── Register ───────────────────────────────────────────────────────────────────
 async function doRegister() {
+  const fullName = document.getElementById('fullName')?.value.trim();
   const username = document.getElementById('username')?.value.trim();
   const email    = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
   const confirm  = document.getElementById('confirmPassword')?.value;
   const dob      = document.getElementById('dob')?.value;
+  const phone    = document.getElementById('phone')?.value.trim();
+  const gender   = document.getElementById('gender')?.value;
+  const city     = document.getElementById('city')?.value.trim();
 
-  if (!username || !email || !password || !confirm) return showError('All fields are required.');
+  if (!fullName || !username || !email || !password || !confirm)
+    return showError('All fields are required.');
+  if (fullName.length < 2)
+    return showError('Please enter your full name.');
   if (username.length < 3 || !/^[a-zA-Z0-9_]+$/.test(username))
     return showError('Username: min 3 chars, letters/numbers/underscore only.');
   if (!emailRe.test(email)) return showError('Enter a valid email address.');
   if (password.length < 6)  return showError('Password must be at least 6 characters.');
   if (password !== confirm)  return showError('Passwords do not match.');
   if (!dob) return showError('Date of birth is required for account recovery.');
+  if (phone && !/^[0-9]{10}$/.test(phone)) return showError('Enter a valid 10-digit phone number.');
 
   setLoading(true);
   try {
-    const res  = await fetch(`${API}/auth/register`, {
+    const res = await fetch(`${API}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, email, password, dob })
+      body: JSON.stringify({ full_name: fullName, username, email, password, dob, phone, gender, city })
     });
     const data = await res.json();
     if (!res.ok) return showError(data.error || 'Registration failed.');
 
     localStorage.setItem('finai_token', data.token);
     localStorage.setItem('finai_user', JSON.stringify({ username: data.username, role: data.role }));
-    showSuccess('Account created! Redirecting...');
-    setTimeout(() => { window.location.href = '/dashboard'; }, 800);
+    showSuccess('Account created! Redirecting to login...');
+    setTimeout(() => { window.location.href = '/login'; }, 800);
   } catch (e) {
     showError('Network error. Please try again.');
   } finally {

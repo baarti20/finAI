@@ -25,10 +25,14 @@ api = Blueprint('api', __name__, url_prefix='/api')
 @api.route('/auth/register', methods=['POST'])
 def register():
     d = request.get_json(force=True)
-    username = (d.get('username') or '').strip()
-    email = (d.get('email') or '').strip().lower()
-    password = d.get('password') or ''
-    dob = (d.get('dob') or '').strip()
+    username  = (d.get('username') or '').strip()
+    email     = (d.get('email') or '').strip().lower()
+    password  = d.get('password') or ''
+    dob       = (d.get('dob') or '').strip()
+    full_name = (d.get('full_name') or '').strip()
+    phone     = (d.get('phone') or '').strip()
+    gender    = (d.get('gender') or '').strip()
+    city      = (d.get('city') or '').strip()
 
     if not username or not email or not password:
         return jsonify({'error': 'All fields required'}), 400
@@ -36,7 +40,9 @@ def register():
         return jsonify({'error': 'Password must be at least 6 characters'}), 400
 
     try:
-        uid = create_user(username, email, password, dob or None)
+        uid = create_user(username, email, password,
+                          dob=dob or None, full_name=full_name or None,
+                          phone=phone or None, gender=gender or None, city=city or None)
     except ValueError as e:
         msg = str(e)
         if 'username' in msg:
