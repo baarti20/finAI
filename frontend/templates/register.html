@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Register — FinAI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/static/css/main.css"/>
+</head>
+<body>
+<div class="hero-orbs">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+</div>
+<nav class="nav scrolled">
+  <div class="nav-inner">
+    <a href="/" class="logo">
+      <span class="logo-icon">◈</span><span>Fin<em>AI</em></span>
+    </a>
+  </div>
+</nav>
+
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="logo"><span class="logo-icon">◈</span><span>Fin<em>AI</em></span></div>
+    </div>
+    <h1 class="auth-title">Create account</h1>
+    <p class="auth-sub">Join FinAI and start predicting your financial future</p>
+
+    <div class="error-msg" id="errorMsg"></div>
+    <div class="success-msg" id="successMsg"></div>
+
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="username" class="form-control" placeholder="johndoe" autocomplete="username"/>
+    </div>
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="email" class="form-control" placeholder="you@email.com" autocomplete="email"/>
+    </div>
+    <div class="form-group">
+      <label>Password <span style="color:var(--text-dim);font-size:0.8rem">(min 6 chars)</span></label>
+      <input type="password" id="password" class="form-control" placeholder="••••••••" autocomplete="new-password"/>
+    </div>
+
+    <button class="btn-primary btn-full" id="registerBtn" onclick="doRegister()">
+      <span class="loading-spin" id="spin"></span>
+      <span id="btnText">Create Account</span>
+      <span class="btn-arrow">→</span>
+    </button>
+
+    <div class="auth-link">
+      Already have an account? <a href="/login">Sign in</a>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/auth.js"></script>
+</body>
+</html>

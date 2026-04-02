@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin — FinAI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/static/css/main.css"/>
+</head>
+<body class="dashboard">
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loadingText">Loading...</div>
+</div>
+
+<!-- Nav -->
+<nav class="nav scrolled">
+  <div class="nav-inner">
+    <a href="/" class="logo"><span class="logo-icon">◈</span><span>Fin<em>AI</em></span></a>
+    <span style="color:var(--warning);font-size:0.8rem;font-weight:600;padding:4px 12px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:50px;margin-left:12px">⚙️ Admin Panel</span>
+    <div style="margin-left:auto;display:flex;gap:12px;align-items:center">
+      <a href="/dashboard" class="btn-outline" style="padding:8px 16px;font-size:0.85rem">User Dashboard</a>
+      <button class="btn-outline" onclick="logout()" style="padding:8px 16px;font-size:0.85rem">Logout</button>
+    </div>
+  </div>
+</nav>
+
+<div class="dash-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-section">Admin</div>
+    <nav class="sidebar-nav">
+      <a class="sidebar-link active" onclick="showPanel('overview')">
+        <span class="sidebar-icon">📊</span> Overview
+      </a>
+      <a class="sidebar-link" onclick="showPanel('users')">
+        <span class="sidebar-icon">👥</span> Users
+      </a>
+      <a class="sidebar-link" onclick="showPanel('predictions')">
+        <span class="sidebar-icon">🔮</span> Predictions
+      </a>
+      <a class="sidebar-link" onclick="showPanel('model')">
+        <span class="sidebar-icon">🧠</span> Model
+      </a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+
+    <!-- ── OVERVIEW ── -->
+    <div class="dash-panel active" id="panel-overview">
+      <div class="dash-header">
+        <h1>Admin Overview <span style="font-size:1.5rem">📊</span></h1>
+        <p>Platform statistics and model performance at a glance.</p>
+      </div>
+      <div class="stats-row" id="statsRow">
+        <div class="stat-card"><div class="stat-card-label">Total Users</div><div class="stat-card-value" id="statUsers">—</div></div>
+        <div class="stat-card"><div class="stat-card-label">Total Predictions</div><div class="stat-card-value" id="statPreds">—</div></div>
+        <div class="stat-card"><div class="stat-card-label">Avg Predicted Savings</div><div class="stat-card-value" id="statAvg">—</div></div>
+        <div class="stat-card"><div class="stat-card-label">Best Model</div><div class="stat-card-value" id="statModel" style="font-size:1rem">—</div></div>
+      </div>
+
+      <div class="panel-grid">
+        <div class="panel-card">
+          <div class="panel-card-title"><span>📈</span> Model Performance</div>
+          <div id="perfMetrics">
+            <div class="metric-pair"><span class="metric-label">LR — R² Score</span><span class="metric-value" id="lrR2">—</span></div>
+            <div class="metric-pair"><span class="metric-label">LR — MAE</span><span class="metric-value" id="lrMAE">—</span></div>
+            <div class="metric-pair"><span class="metric-label">LR — RMSE</span><span class="metric-value" id="lrRMSE">—</span></div>
+            <div class="metric-pair"><span class="metric-label">RF — R² Score</span><span class="metric-value" id="rfR2">—</span></div>
+            <div class="metric-pair"><span class="metric-label">RF — MAE</span><span class="metric-value" id="rfMAE">—</span></div>
+            <div class="metric-pair"><span class="metric-label">RF — RMSE</span><span class="metric-value" id="rfRMSE">—</span></div>
+          </div>
+        </div>
+        <div class="panel-card">
+          <div class="panel-card-title"><span>🔬</span> Feature Importances (RF)</div>
+          <div id="featureBars"></div>
+        </div>
+      </div>
+
+      <div class="panel-card" style="margin-top:20px">
+        <div class="panel-card-title"><span>📊</span> Model Comparison Chart</div>
+        <div style="height:260px"><canvas id="adminChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ── USERS ── -->
+    <div class="dash-panel" id="panel-users">
+      <div class="dash-header">
+        <h1>Users <span style="font-size:1.5rem">👥</span></h1>
+        <p>All registered users on the platform.</p>
+      </div>
+      <div class="panel-card">
+        <div style="overflow-x:auto">
+          <table class="history-table">
+            <thead>
+              <tr><th>ID</th><th>Username</th><th>Email</th><th>Role</th><th>Joined</th><th>Last Login</th></tr>
+            </thead>
+            <tbody id="usersBody">
+              <tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:40px">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PREDICTIONS ── -->
+    <div class="dash-panel" id="panel-predictions">
+      <div class="dash-header">
+        <h1>Prediction Logs <span style="font-size:1.5rem">🔮</span></h1>
+        <p>All prediction events across all users.</p>
+      </div>
+      <div class="panel-card">
+        <div style="overflow-x:auto">
+          <table class="history-table">
+            <thead>
+              <tr><th>#</th><th>User</th><th>Date</th><th>Income</th><th>Expenses</th><th>Goal</th><th>Predicted</th><th>Model</th></tr>
+            </thead>
+            <tbody id="predsBody">
+              <tr><td colspan="8" style="text-align:center;color:var(--text-dim);padding:40px">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MODEL ── -->
+    <div class="dash-panel" id="panel-model">
+      <div class="dash-header">
+        <h1>Model Management <span style="font-size:1.5rem">🧠</span></h1>
+        <p>Manage and retrain the AI prediction models.</p>
+      </div>
+      <div class="panel-grid">
+        <div class="panel-card">
+          <div class="panel-card-title"><span>🔄</span> Retrain Model</div>
+          <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:20px">
+            Regenerates the 10,000-record training dataset and retrains both models.
+            The best performer (by R²) is auto-selected. This may take 30–60 seconds.
+          </p>
+          <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:var(--radius-sm);padding:14px;margin-bottom:20px;font-size:0.85rem;color:#fcd34d">
+            ⚠️ This will overwrite the existing trained model artifacts.
+          </div>
+          <button class="btn-primary" onclick="retrainModel()" id="retrainBtn">
+            🔄 Start Retraining
+          </button>
+          <div id="retrainResult" style="margin-top:16px;display:none"></div>
+        </div>
+        <div class="panel-card">
+          <div class="panel-card-title"><span>📋</span> Training Info</div>
+          <div class="metric-pair"><span class="metric-label">Dataset Size</span><span class="metric-value">10,000 rows</span></div>
+          <div class="metric-pair"><span class="metric-label">Features</span><span class="metric-value">6</span></div>
+          <div class="metric-pair"><span class="metric-label">Models Trained</span><span class="metric-value">2</span></div>
+          <div class="metric-pair"><span class="metric-label">RF Estimators</span><span class="metric-value">150 trees</span></div>
+          <div class="metric-pair"><span class="metric-label">Train/Test Split</span><span class="metric-value">80% / 20%</span></div>
+          <div class="metric-pair"><span class="metric-label">Scaling</span><span class="metric-value">StandardScaler</span></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/static/js/admin.js"></script>
+</body>
+</html>

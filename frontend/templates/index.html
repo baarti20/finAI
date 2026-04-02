@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FinAI — AI Financial Prediction System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/static/css/main.css"/>
+</head>
+<body>
+
+<!-- ─── NAV ─────────────────────────────────────────────────────────── -->
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="/" class="logo">
+      <span class="logo-icon">◈</span>
+      <span>Fin<em>AI</em></span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#how-it-works">How It Works</a></li>
+      <li><a href="#tech">Tech Stack</a></li>
+      <li><a href="#developer">Developer</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="/login" class="btn-outline">Login</a>
+      <a href="/register" class="btn-primary">Get Started</a>
+    </div>
+    <button class="nav-toggle" id="navToggle">☰</button>
+  </div>
+</nav>
+
+<!-- ─── HERO ─────────────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="badge-dot"></span>
+      AI-Powered · Real-Time · Accurate
+    </div>
+    <h1 class="hero-title">
+      Predict the vibe of<br/>
+      <span class="gradient-text"> your money</span><br/>
+      before it hits
+    </h1>
+    <p class="hero-desc">
+      Harness the power of Machine Learning — Linear Regression &amp; Random Forest —
+      to forecast your savings, detect financial risks, and unlock personalized insights.
+      Trained on 10,000 real financial profiles.
+    </p>
+    <div class="hero-actions">
+      <a href="/register" class="btn-primary btn-lg">
+        Start Predicting Free
+        <span class="btn-arrow">→</span>
+      </a>
+      <a href="#how-it-works" class="btn-ghost btn-lg">Watch Demo</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-num" data-target="10000">0</span><span>Training Records</span></div>
+      <div class="stat"><span class="stat-num" data-target="97">0</span><span>% Accuracy</span></div>
+      <div class="stat"><span class="stat-num" data-target="6">0</span><span>AI Features</span></div>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="card-float">
+      <div class="card-float-header">
+        <span class="card-dot green"></span>
+        <span>Prediction Engine</span>
+      </div>
+      <div class="card-float-value">$28,450</div>
+      <div class="card-float-label">Projected Annual Savings</div>
+      <div class="mini-chart">
+        <svg viewBox="0 0 200 60" class="sparkline">
+          <polyline points="0,50 30,40 60,45 90,20 120,25 150,10 200,5"
+            fill="none" stroke="url(#g1)" stroke-width="2.5" stroke-linecap="round"/>
+          <defs>
+            <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#0066ff"/>
+              <stop offset="100%" stop-color="#00d4aa"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="card-float-badges">
+        <span class="badge-green">▲ 12.4%</span>
+        <span class="badge-blue">AI Optimized</span>
+      </div>
+    </div>
+    <div class="card-insight">
+      <span class="insight-icon">💡</span>
+      <span>Reduce variable expenses by 8% to hit savings goal</span>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FEATURES ──────────────────────────────────────────────────────── -->
+<section class="features section" id="features">
+  <div class="container">
+    <div class="section-label">Why FinAI</div>
+    <h2 class="section-title">Everything you need to<br/><span class="gradient-text">master your finances</span></h2>
+    <div class="features-grid">
+      <div class="feature-card" style="--delay:0s">
+        <div class="feature-icon">🧠</div>
+        <h3>Dual AI Models</h3>
+        <p>Linear Regression + Random Forest trained on 10,000 records. Auto-selects the best performer by R² score.</p>
+      </div>
+      <div class="feature-card" style="--delay:.08s">
+        <div class="feature-icon">📊</div>
+        <h3>Smart Analytics</h3>
+        <p>Interactive charts visualise income vs expenses vs savings in real time with animated breakdowns.</p>
+      </div>
+      <div class="feature-card" style="--delay:.16s">
+        <div class="feature-icon">🎯</div>
+        <h3>Goal Tracking</h3>
+        <p>Set savings targets and get instant AI feedback on whether you'll hit them — plus actionable tips to bridge the gap.</p>
+      </div>
+      <div class="feature-card" style="--delay:.24s">
+        <div class="feature-icon">🔐</div>
+        <h3>Secure JWT Auth</h3>
+        <p>Bank-grade JWT authentication, bcrypt password hashing, and role-based access control keep your data safe.</p>
+      </div>
+      <div class="feature-card" style="--delay:.32s">
+        <div class="feature-icon">📄</div>
+        <h3>PDF Reports</h3>
+        <p>Download professional prediction reports with model metrics, insights, and charts — shareable with your advisor.</p>
+      </div>
+      <div class="feature-card" style="--delay:.40s">
+        <div class="feature-icon">⚙️</div>
+        <h3>Admin Console</h3>
+        <p>Full admin dashboard: user management, prediction logs, model performance, and one-click model retraining.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── HOW IT WORKS ──────────────────────────────────────────────────── -->
+<section class="how-it-works section" id="how-it-works">
+  <div class="container">
+    <div class="section-label">Process</div>
+    <h2 class="section-title">Three steps to your<br/><span class="gradient-text">financial forecast</span></h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-content">
+          <h3>Enter Your Data</h3>
+          <p>Input your income, fixed &amp; variable expenses, savings goal, and lifestyle score (1–10).</p>
+        </div>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-content">
+          <h3>AI Processes</h3>
+          <p>Our ensemble ML models analyse 6 financial features against 10,000 training samples in milliseconds.</p>
+        </div>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-content">
+          <h3>Get Insights</h3>
+          <p>Receive predicted savings, personalised advice cards, visual charts, and a downloadable PDF report.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── TECH STACK ─────────────────────────────────────────────────────── -->
+<section class="tech section" id="tech">
+  <div class="container">
+    <div class="section-label">Architecture</div>
+    <h2 class="section-title">Built with production-grade<br/><span class="gradient-text">technology</span></h2>
+    <div class="tech-grid">
+      <div class="tech-card">
+        <div class="tech-badge">Frontend</div>
+        <ul>
+          <li><span class="dot blue"></span>HTML5 / CSS3 / Vanilla JS</li>
+          <li><span class="dot blue"></span>Chart.js — animated charts</li>
+          <li><span class="dot blue"></span>CSS animations + transitions</li>
+          <li><span class="dot blue"></span>Responsive glassmorphism UI</li>
+        </ul>
+      </div>
+      <div class="tech-card">
+        <div class="tech-badge">Backend</div>
+        <ul>
+          <li><span class="dot green"></span>Python 3.11 + Flask</li>
+          <li><span class="dot green"></span>JWT Authentication</li>
+          <li><span class="dot green"></span>SQLite database</li>
+          <li><span class="dot green"></span>ReportLab PDF engine</li>
+        </ul>
+      </div>
+      <div class="tech-card">
+        <div class="tech-badge">AI / ML</div>
+        <ul>
+          <li><span class="dot purple"></span>Scikit-learn models</li>
+          <li><span class="dot purple"></span>Linear Regression</li>
+          <li><span class="dot purple"></span>Random Forest (150 trees)</li>
+          <li><span class="dot purple"></span>StandardScaler + Pickle</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── DEVELOPER ─────────────────────────────────────────────────────── -->
+<section class="developer section" id="developer">
+  <div class="container">
+    <div class="dev-card">
+      <div class="dev-avatar">
+        <div class="avatar-ring"></div>
+        <div class="avatar-inner">AI</div>
+      </div>
+      <div class="dev-info">
+        <div class="section-label">Developer</div>
+        <h2>Built with passion for<br/><span class="gradient-text">Fintech &amp; AI</span></h2>
+        <p>This project was crafted as a full-stack showcase combining modern Python ML pipelines, RESTful API design, and a polished glassmorphism UI — all production-ready and extensible.</p>
+        <div class="dev-tags">
+          <span>Full-Stack Dev</span>
+          <span>ML Engineer</span>
+          <span>Python</span>
+          <span>Flask</span>
+          <span>Scikit-learn</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CTA ───────────────────────────────────────────────────────────── -->
+<section class="cta section">
+  <div class="container">
+    <div class="cta-box">
+      <div class="cta-orb"></div>
+      <h2>Ready to predict your<br/><span class="gradient-text">financial future?</span></h2>
+      <p>Join thousands of users who trust FinAI to navigate their financial journey.</p>
+      <div class="cta-actions">
+        <a href="/register" class="btn-primary btn-lg">Create Free Account</a>
+        <a href="/login" class="btn-outline btn-lg">Sign In</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ────────────────────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <a href="/" class="logo">
+        <span class="logo-icon">◈</span>
+        <span>Fin<em>AI</em></span>
+      </a>
+      <p>“Predict the vibe of your money before it hits.”</p>
+      <p class="footer-small">© 2026 FinAI. Built for demonstration purposes.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="/static/js/landing.js"></script>
+</body>
+</html>
