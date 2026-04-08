@@ -150,8 +150,8 @@ reportlab==4.2.2
 | POST   | /api/admin/retrain    | Retrain ML models synchronously         |
 
 ### Health
-| Method | Endpoint     | Description    |
-|--------|--------------|----------------|
+| Method | Endpoint     | Description      |
+|--------|--------------|------------------|
 | GET    | /api/health  | API health check |
 
 ### Register Request Body
