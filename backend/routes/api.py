@@ -11,7 +11,7 @@ from models.database import (
     create_user, get_user_by_email, get_user_by_id,
     update_last_login, save_prediction, get_user_predictions,
     get_all_users, get_all_predictions, get_prediction_stats,
-    verify_password, reset_password
+    verify_password, reset_password, append_prediction_to_dataset
 )
 from utils.auth import create_token, token_required, admin_required
 from utils.predictor import predict, generate_insights, get_predictor, FEATURES
@@ -168,6 +168,7 @@ def make_prediction():
 
     save_prediction(request.user_id, data, result['predicted_savings'], result['model_used'],
                     file_name=file_name, file_data=file_data)
+    append_prediction_to_dataset(data, result['predicted_savings'])
 
     return jsonify({
         **result,

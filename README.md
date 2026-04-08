@@ -6,13 +6,13 @@ A production-ready, full-stack AI-powered financial prediction platform built wi
 
 ## 👨‍💻 Developer
 
-| Field       | Details            |
-|-------------|--------------------|
-| Name        | Aarti Bhanushali   |
-| Name        | Kajal Bamaniya     |
-| Name        | Teesha Panchal     |
-| Name        | Frinda Patel       |
-| Stream      | B.Sc. IT           |
+| Field  | Details          |
+|--------|------------------|
+| Name   | Aarti Bhanushali |
+| Name   | Kajal Bamaniya   |
+| Name   | Teesha Panchal   |
+| Name   | Frinda Patel     |
+| Stream | B.Sc. IT         |
 
 ---
 
@@ -40,9 +40,9 @@ finai/
 │       └── pdf_report.py         # PDF report generator
 ├── frontend/
 │   ├── templates/
-│   │   ├── index.html            # Landing page with developer section
+│   │   ├── index.html            # Landing page
 │   │   ├── login.html            # Login + Forgot Password modal
-│   │   ├── register.html         # Full registration form (name, phone, gender, city, DOB)
+│   │   ├── register.html         # Registration form
 │   │   ├── dashboard.html        # User dashboard
 │   │   └── admin.html            # Admin panel
 │   └── static/
@@ -55,7 +55,7 @@ finai/
 ├── ml/
 │   └── train_model.py            # ML training script
 ├── data/
-│   └── financial_dataset.csv     # Generated dataset (auto-created)
+│   └── financial_dataset.csv     # Dataset (auto-created, grows with real predictions)
 └── README.md
 ```
 
@@ -77,13 +77,11 @@ cd finai
 pip install -r backend/requirements.txt
 ```
 
-> Note: For Python 3.13, pin `scikit-learn==1.8.0` in `backend/requirements.txt` (instead of 1.5.1) to avoid building from source and MSVC compiler issues.
-
 ### 3. Train the ML models (first time only)
 ```bash
 python ml/train_model.py
 ```
-This generates `data/financial_dataset.csv` (10,000 rows) and saves trained models to `backend/models/artifacts/`.
+Generates `data/financial_dataset.csv` (10,000 synthetic rows) and saves trained models to `backend/models/artifacts/`.
 
 ### 4. Start the server
 ```bash
@@ -99,39 +97,62 @@ http://localhost:5000
 
 ## 🔑 Default Credentials
 
-| Role  | Email               | Password  |
-|-------|---------------------|-----------|
-| Admin | admin@finai.com     | admin123  |
+| Role  | Email           | Password |
+|-------|-----------------|----------|
+| Admin | admin@finai.com | admin123 |
 
 Register any new account for regular user access. After registration, users are redirected to the login page.
+
+---
+
+## 📦 Dependencies
+
+```
+flask==3.0.3
+flask-cors==4.0.1
+flask-jwt-extended==4.6.0
+flask-sqlalchemy==3.1.1
+werkzeug==3.0.3
+scikit-learn==1.8.0
+numpy==2.1.3
+pandas==2.2.2
+python-dotenv==1.0.1
+bcrypt==4.1.3
+reportlab==4.2.2
+```
 
 ---
 
 ## 🌐 API Endpoints
 
 ### Auth
-| Method | Endpoint                  | Description                              | Auth Required |
-|--------|---------------------------|------------------------------------------|---------------|
-| POST   | /api/auth/register        | Register new user (full profile + DOB)   | No            |
-| POST   | /api/auth/login           | Login, get JWT                           | No            |
-| GET    | /api/auth/me              | Get current user                         | Yes           |
-| POST   | /api/auth/verify-dob      | Verify email + DOB for password reset    | No            |
-| POST   | /api/auth/reset-password  | Reset password after DOB verification    | No            |
+| Method | Endpoint                 | Description                            | Auth Required |
+|--------|--------------------------|----------------------------------------|---------------|
+| POST   | /api/auth/register       | Register new user (full profile + DOB) | No            |
+| POST   | /api/auth/login          | Login, get JWT                         | No            |
+| GET    | /api/auth/me             | Get current user                       | Yes           |
+| POST   | /api/auth/verify-dob     | Verify email + DOB for password reset  | No            |
+| POST   | /api/auth/reset-password | Reset password after DOB verification  | No            |
 
 ### Predictions
-| Method | Endpoint                    | Description                          | Auth Required |
-|--------|-----------------------------|--------------------------------------|---------------|
-| POST   | /api/predict                | Run AI prediction (INR, file attach) | Yes           |
-| GET    | /api/predictions/history    | User's past predictions + file data  | Yes           |
-| POST   | /api/predictions/report     | Download PDF report                  | Yes           |
+| Method | Endpoint                 | Description                          | Auth Required |
+|--------|--------------------------|--------------------------------------|---------------|
+| POST   | /api/predict             | Run AI prediction (INR, file attach) | Yes           |
+| GET    | /api/predictions/history | User's past predictions + file data  | Yes           |
+| POST   | /api/predictions/report  | Download PDF report                  | Yes           |
 
 ### Admin (admin role only)
-| Method | Endpoint                   | Description                              |
-|--------|----------------------------|------------------------------------------|
-| GET    | /api/admin/users           | All registered users (full profile)      |
-| GET    | /api/admin/predictions     | All prediction logs with file snapshots  |
-| GET    | /api/admin/stats           | Platform + model stats                   |
-| POST   | /api/admin/retrain         | Retrain ML models → opens dataset CSV    |
+| Method | Endpoint              | Description                             |
+|--------|-----------------------|-----------------------------------------|
+| GET    | /api/admin/users      | All registered users (full profile)     |
+| GET    | /api/admin/predictions| All prediction logs with file snapshots |
+| GET    | /api/admin/stats      | Platform + model stats                  |
+| POST   | /api/admin/retrain    | Retrain ML models synchronously         |
+
+### Health
+| Method | Endpoint     | Description    |
+|--------|--------------|----------------|
+| GET    | /api/health  | API health check |
 
 ### Register Request Body
 ```json
@@ -181,7 +202,7 @@ Register any new account for regular user access. After registration, users are 
       "text": "Great job! Expenses at 46.2% of income keeps you on a strong financial path."
     }
   ],
-  "input": { ... }
+  "input": { "..." : "..." }
 }
 ```
 
@@ -206,21 +227,23 @@ Register any new account for regular user access. After registration, users are 
 | last_login    | TEXT    | Last login timestamp                 |
 
 ### predictions
-| Column            | Type    | Description                    |
-|-------------------|---------|--------------------------------|
-| id                | INTEGER | Primary key                    |
-| user_id           | INTEGER | Foreign key → users.id         |
-| income            | REAL    | Annual income (₹)              |
-| fixed_expenses    | REAL    | Fixed expenses (₹)             |
-| variable_expenses | REAL    | Variable expenses (₹)          |
-| total_expenses    | REAL    | fixed + variable (₹)           |
-| savings_goal      | REAL    | Target savings (₹)             |
-| lifestyle_score   | REAL    | 1–10 lifestyle score           |
-| predicted_savings | REAL    | AI predicted savings (₹)       |
-| model_used        | TEXT    | linear_regression / random_forest |
-| file_name         | TEXT    | Attached file name (optional)  |
-| file_data         | TEXT    | JSON snapshot of file contents |
-| created_at        | TEXT    | Prediction timestamp           |
+| Column            | Type    | Description                           |
+|-------------------|---------|---------------------------------------|
+| id                | INTEGER | Primary key                           |
+| user_id           | INTEGER | Foreign key → users.id                |
+| income            | REAL    | Annual income (₹)                     |
+| fixed_expenses    | REAL    | Fixed expenses (₹)                    |
+| variable_expenses | REAL    | Variable expenses (₹)                 |
+| total_expenses    | REAL    | fixed + variable (₹)                  |
+| savings_goal      | REAL    | Target savings (₹)                    |
+| lifestyle_score   | REAL    | 1–10 lifestyle score                  |
+| predicted_savings | REAL    | AI predicted savings (₹)              |
+| model_used        | TEXT    | linear_regression / random_forest     |
+| file_name         | TEXT    | Attached file name (optional)         |
+| file_data         | TEXT    | JSON snapshot of file contents        |
+| created_at        | TEXT    | Prediction timestamp                  |
+
+> Each prediction is also appended to `data/financial_dataset.csv` to continuously grow the training dataset with real user data.
 
 ---
 
@@ -228,10 +251,11 @@ Register any new account for regular user access. After registration, users are 
 
 ### Dataset Generation
 - 10,000 synthetic financial records with realistic distributions
-- Income: Normal distribution, clipped ₹15k–₹300k equivalent
+- Income: Normal distribution (mean ₹65k, std ₹25k), clipped ₹15k–₹300k
 - Fixed expenses: 20–40% of income + noise
-- Variable expenses: Lifestyle-influenced, 10–30% of income
-- Savings: income − expenses × goal_adherence − lifestyle_penalty + noise
+- Variable expenses: Lifestyle-influenced, 10–30% of income × (lifestyle/5)
+- Savings: `(income − expenses) × goal_adherence − (lifestyle − 5) × 200 + noise`
+- Real user predictions are appended to the CSV and merged on retrain
 
 ### Features
 | Feature           | Description                        |
@@ -244,12 +268,21 @@ Register any new account for regular user access. After registration, users are 
 | lifestyle_score   | 1 (frugal) to 10 (lavish)          |
 
 ### Models
-| Model              | Config                                    |
-|--------------------|-------------------------------------------|
-| LinearRegression   | StandardScaler + sklearn LinearRegression |
-| RandomForest       | 150 trees, max_depth=12, n_jobs=-1        |
+| Model            | Config                                                              |
+|------------------|---------------------------------------------------------------------|
+| LinearRegression | StandardScaler + sklearn LinearRegression                           |
+| RandomForest     | 150 trees, max_depth=12, min_samples_split=5, n_jobs=-1, seed=42   |
 
-Best model selected automatically by R² on 20% holdout test set.
+Best model selected automatically by R² on 20% holdout test set. Both predictions are always returned for comparison.
+
+### Insights Engine
+Rule-based insights generated per prediction covering:
+- Expense ratio (danger >80%, warning >65%, success otherwise)
+- Savings goal achievement or gap
+- Lifestyle score optimization tips
+- Savings rate vs 50/30/20 rule
+- High fixed cost warnings
+- Negative savings alert
 
 ---
 
@@ -266,19 +299,17 @@ Best model selected automatically by R² on 20% holdout test set.
 
 ### Auth
 - ✅ JWT authentication (register / login / protected routes)
-- ✅ Full registration form — Full Name, Username, Email, Password, DOB, Phone, Gender, City
+- ✅ Full registration — Full Name, Username, Email, Password, DOB, Phone, Gender, City
 - ✅ After registration → redirected to login page
 - ✅ SHA256 password hashing
-- ✅ Date of birth stored at registration for account recovery
 - ✅ Forgot Password — 3-step modal: email → DOB verify → new password
-- ✅ Client-side validation: full name, email format, username rules, password strength meter, phone format, confirm password match
+- ✅ Client-side validation: email format, username rules, password strength meter, phone format, confirm password match
 - ✅ Show/hide password toggle on all password fields
 
 ### User Dashboard
 - ✅ Financial prediction form with INR inputs (₹)
 - ✅ File import — Excel (.xlsx) or Notes (.txt/.csv) auto-fills Income, Fixed & Variable Expenses
 - ✅ File chip with filename + ✕ cancel button
-- ✅ Income / Fixed / Variable Expenses set to 0 automatically on file attach
 - ✅ Quick fill presets: Low Income, Middle Class, High Earner
 - ✅ Prediction result card with ₹ savings, model badge, bar chart
 - ✅ AI financial insights (expense ratio, savings rate, lifestyle analysis)
@@ -293,22 +324,22 @@ Best model selected automatically by R² on 20% holdout test set.
 
 ### Admin Dashboard
 - ✅ Overview: total users, predictions, avg savings (₹), best model
-- ✅ Model performance metrics in ₹ (MAE, RMSE, R²)
+- ✅ Model performance metrics (MAE, RMSE, R²)
 - ✅ Feature importance bars (Random Forest)
 - ✅ Model comparison bar chart (LR vs RF)
 - ✅ Users table — ID, Full Name, Username, Email, Phone, Gender, City, Role, Joined, Last Login
 - ✅ Prediction logs with ₹ amounts + attached file viewer per user
 - ✅ Per-user model comparison (radar chart — LR vs RF)
-- ✅ One-click model retraining → opens dataset CSV on GitHub after success
+- ✅ One-click model retraining (runs synchronously, merges real + synthetic data)
 
 ### General
 - ✅ All amounts displayed in Indian Rupees (₹) — no USD conversion
+- ✅ Real predictions appended to dataset CSV for continuous learning
 - ✅ File snapshots stored in DB and viewable in history (user + admin)
-- ✅ Dark-themed dropdowns (select elements)
-- ✅ SQLite database with automatic schema init + migration safety for new columns
+- ✅ SQLite with automatic schema init + migration safety for new columns
+- ✅ CORS headers for API access
 - ✅ Mobile-responsive design
 - ✅ Loading animations and overlays
-- ✅ CORS headers for API access
 
 ---
 

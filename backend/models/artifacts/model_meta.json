@@ -1,6 +1,6 @@
 {
-  "best_model_name": "linear_regression",
-  "use_scaler_for_best": true,
+  "best_model_name": "random_forest",
+  "use_scaler_for_best": false,
   "features": [
     "income",
     "fixed_expenses",
@@ -11,23 +11,23 @@
   ],
   "metrics": {
     "linear_regression": {
-      "r2": 0.7474,
-      "mae": 5430.75,
-      "rmse": 7029.1
+      "r2": 0.776,
+      "mae": 5477.59,
+      "rmse": 7042.55
     },
     "random_forest": {
-      "r2": 0.732,
-      "mae": 5540.96,
-      "rmse": 7239.46
+      "r2": 0.9159,
+      "mae": 3240.32,
+      "rmse": 4314.41
     },
-    "best": "linear_regression",
+    "best": "random_forest",
     "feature_importances": {
-      "income": 0.5685,
-      "fixed_expenses": 0.0283,
-      "variable_expenses": 0.1132,
-      "total_expenses": 0.1054,
-      "savings_goal": 0.0279,
-      "lifestyle_score": 0.1567
+      "income": 0.8105,
+      "fixed_expenses": 0.0106,
+      "variable_expenses": 0.0476,
+      "total_expenses": 0.0516,
+      "savings_goal": 0.0116,
+      "lifestyle_score": 0.0681
     }
   }
 }

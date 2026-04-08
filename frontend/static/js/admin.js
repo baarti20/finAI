@@ -332,10 +332,8 @@ async function retrainModel() {
     const data = await res.json();
     result.style.display = 'block';
     if (res.ok) {
-      result.innerHTML = `<div class="success-msg show">✅ ${data.message} — Redirecting to dataset...</div>`;
-      setTimeout(() => {
-        window.open('https://github.com/baarti20/finAI/blob/main/data/financial_dataset.csv', '_blank');
-      }, 1200);
+      result.innerHTML = `<div class="success-msg show">✅ ${data.message}</div>`;
+      await loadStats();
     } else {
       result.innerHTML = `<div class="error-msg show">❌ ${data.error}</div>`;
     }

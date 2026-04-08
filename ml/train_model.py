@@ -2,6 +2,9 @@
 AI Financial Prediction System - Model Training Script
 Generates 10,000 realistic financial records and trains Linear Regression + Random Forest
 """
+import sys
+import io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 import numpy as np
 import pandas as pd
@@ -13,7 +16,6 @@ from sklearn.preprocessing import StandardScaler
 import pickle
 import json
 import os
-import sys
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -93,7 +95,7 @@ def train_and_evaluate(df):
         'mae': round(mean_absolute_error(y_test, lr_preds), 2),
         'rmse': round(np.sqrt(mean_squared_error(y_test, lr_preds)), 2)
     }
-    print(f"    R²={lr_metrics['r2']}  MAE={lr_metrics['mae']}  RMSE={lr_metrics['rmse']}")
+    print(f"    R2={lr_metrics['r2']}  MAE={lr_metrics['mae']}  RMSE={lr_metrics['rmse']}")
 
     # ── Random Forest ──
     print("\n[+] Training Random Forest Regressor...")
@@ -112,7 +114,7 @@ def train_and_evaluate(df):
         'mae': round(mean_absolute_error(y_test, rf_preds), 2),
         'rmse': round(np.sqrt(mean_squared_error(y_test, rf_preds)), 2)
     }
-    print(f"    R²={rf_metrics['r2']}  MAE={rf_metrics['mae']}  RMSE={rf_metrics['rmse']}")
+    print(f"    R2={rf_metrics['r2']}  MAE={rf_metrics['mae']}  RMSE={rf_metrics['rmse']}")
 
     # ── Feature Importances ──
     importances = dict(zip(features, rf.feature_importances_.round(4).tolist()))
@@ -122,7 +124,7 @@ def train_and_evaluate(df):
     best_model = rf if best_model_name == 'random_forest' else lr
     use_scaler = best_model_name == 'linear_regression'
 
-    print(f"\n[✓] Best model: {best_model_name.upper()} (R²={max(lr_metrics['r2'], rf_metrics['r2'])})")
+    print(f"\n[OK] Best model: {best_model_name.upper()} (R2={max(lr_metrics['r2'], rf_metrics['r2'])})")
 
     return {
         'best_model': best_model,
@@ -167,7 +169,7 @@ def save_artifacts(results, out_dir):
     with open(os.path.join(out_dir, 'model_meta.json'), 'w') as f:
         json.dump(meta, f, indent=2)
 
-    print(f"\n[✓] Artifacts saved to: {out_dir}/")
+    print(f"\n[OK] Artifacts saved to: {out_dir}/")
 
 
 # ─── Main ──────────────────────────────────────────────────────────────────────
@@ -176,12 +178,35 @@ if __name__ == '__main__':
     BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     DATA_DIR = os.path.join(BASE, 'data')
     MODEL_DIR = os.path.join(BASE, 'backend', 'models', 'artifacts')
+    CSV_PATH = os.path.join(DATA_DIR, 'financial_dataset.csv')
 
-    df = generate_dataset(10000)
     os.makedirs(DATA_DIR, exist_ok=True)
-    df.to_csv(os.path.join(DATA_DIR, 'financial_dataset.csv'), index=False)
-    print(f"[✓] Dataset saved → data/financial_dataset.csv")
+
+    # Load existing real user data if present
+    existing_df = None
+    if os.path.exists(CSV_PATH):
+        try:
+            existing_df = pd.read_csv(CSV_PATH)
+            # Keep only rows with valid (non-zero) income — filters out blank registration rows
+            existing_df = existing_df[existing_df['income'] > 0].reset_index(drop=True)
+            print(f"[+] Loaded {len(existing_df)} existing records from dataset (real user data preserved)")
+        except Exception as e:
+            print(f"[!] Could not load existing dataset: {e}")
+            existing_df = None
+
+    # Generate synthetic base data
+    synthetic_df = generate_dataset(10000)
+
+    # Merge: real user data takes priority, synthetic fills the rest
+    if existing_df is not None and len(existing_df) > 0:
+        df = pd.concat([existing_df, synthetic_df], ignore_index=True)
+        print(f"[+] Combined dataset: {len(existing_df)} real + {len(synthetic_df)} synthetic = {len(df)} total rows")
+    else:
+        df = synthetic_df
+
+    df.to_csv(CSV_PATH, index=False)
+    print(f"[OK] Dataset saved: data/financial_dataset.csv ({len(df)} rows)")
 
     results = train_and_evaluate(df)
     save_artifacts(results, MODEL_DIR)
-    print("\n[✓] Training complete!")
+    print("\n[OK] Training complete!")

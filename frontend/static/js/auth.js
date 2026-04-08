@@ -185,8 +185,6 @@ async function doRegister() {
     const data = await res.json();
     if (!res.ok) return showError(data.error || 'Registration failed.');
 
-    localStorage.setItem('finai_token', data.token);
-    localStorage.setItem('finai_user', JSON.stringify({ username: data.username, role: data.role }));
     showSuccess('Account created! Redirecting to login...');
     setTimeout(() => { window.location.href = '/login'; }, 800);
   } catch (e) {

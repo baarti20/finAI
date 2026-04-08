@@ -2,8 +2,11 @@
 import sqlite3
 import hashlib
 import os
+import csv
 import json
 from datetime import datetime
+
+DATASET_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'financial_dataset.csv'))
 
 DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'finai.db'))
 
@@ -91,11 +94,30 @@ def create_user(username, email, password, dob=None, full_name=None, phone=None,
             (username, email, hash_password(password), dob, full_name, phone, gender, city)
         )
         conn.commit()
-        return c.lastrowid
+        uid = c.lastrowid
+        return uid
     except sqlite3.IntegrityError as e:
         raise ValueError(str(e))
     finally:
         conn.close()
+
+
+def append_prediction_to_dataset(data: dict, predicted_savings: float):
+    """Append a real prediction row to the training dataset."""
+    try:
+        row = [
+            round(data['income'], 2),
+            round(data['fixed_expenses'], 2),
+            round(data['variable_expenses'], 2),
+            round(data['total_expenses'], 2),
+            round(data['savings_goal'], 2),
+            round(data['lifestyle_score'], 2),
+            round(predicted_savings, 2)
+        ]
+        with open(DATASET_PATH, 'a', newline='') as f:
+            csv.writer(f).writerow(row)
+    except Exception:
+        pass
 
 
 def reset_password(email, new_password):

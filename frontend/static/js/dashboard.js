@@ -24,6 +24,13 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('sidebarToggle')?.addEventListener('click', () => {
     document.getElementById('sidebar').classList.toggle('open');
   });
+  document.addEventListener('click', e => {
+    const sidebar = document.getElementById('sidebar');
+    const toggle = document.getElementById('sidebarToggle');
+    if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && e.target !== toggle) {
+      sidebar.classList.remove('open');
+    }
+  });
 
   await loadProfile();
   await loadHistory();
@@ -118,12 +125,9 @@ async function runPrediction() {
 function displayResult(data, income, fixed, variable, goal) {
   const predInr = data.predicted_savings;
   const valEl = document.getElementById('resultValue');
-  const inrEl = document.getElementById('resultValueINR');
 
   valEl.textContent = formatINR(predInr);
   valEl.className = 'result-value ' + (predInr >= 0 ? 'result-positive' : 'result-negative');
-  inrEl.textContent = 'Predicted Annual Savings (INR)';
-  inrEl.style.color = 'var(--text-dim)';
 
   document.getElementById('modelBadge').textContent = '⚡ ' + data.model_used.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   document.getElementById('resultEmpty').style.display = 'none';
