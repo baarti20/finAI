@@ -17,6 +17,12 @@ function formatINR(amount) {
 
 // ── Init ───────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
+  // Sidebar toggle (mobile)
+  document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+    const open = document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebarBackdrop')?.classList.toggle('show', open);
+  });
+
   await loadStats();
   await loadUsers();
   await loadPredictions();
@@ -30,6 +36,12 @@ function showPanel(name) {
   document.querySelectorAll('.sidebar-link').forEach(l => {
     if (l.textContent.toLowerCase().includes(name.substring(0, 4))) l.classList.add('active');
   });
+  closeSidebar();
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar')?.classList.remove('open');
+  document.getElementById('sidebarBackdrop')?.classList.remove('show');
 }
 
 // ── Stats & Overview ───────────────────────────────────────────────

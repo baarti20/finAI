@@ -1393,23 +1393,207 @@ select option {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Responsive */
+/* ─── RESPONSIVE ─────────────────────────────────────────────────── */
+
+/* Sidebar overlay backdrop */
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(4,8,16,0.7);
+  backdrop-filter: blur(2px);
+  z-index: 99;
+}
+.sidebar-backdrop.show { display: block; }
+
+@media (max-width: 1024px) {
+  .dev-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
 @media (max-width: 900px) {
-  .hero { flex-direction: column; padding-top: 100px; }
+  /* Hero */
+  .hero {
+    flex-direction: column;
+    padding-top: 100px;
+    padding-bottom: 60px;
+    gap: 32px;
+    text-align: center;
+  }
+  .hero-content { display: flex; flex-direction: column; align-items: center; }
+  .hero-desc { max-width: 100%; }
+  .hero-actions { justify-content: center; }
+  .hero-stats { justify-content: center; gap: 24px; }
   .hero-visual { width: 100%; flex: unset; }
-  .card-float { max-width: 340px; margin: 0 auto 16px; }
+  .card-float { max-width: 360px; margin: 0 auto 16px; }
+
+  /* Sections */
+  .section { padding: 72px 20px; }
+  .section-title { margin-bottom: 40px; }
+
+  /* Steps */
+  .step-connector { display: none; }
+  .steps { flex-direction: column; gap: 16px; }
+  .step { min-width: unset; }
+
+  /* Grids */
   .panel-grid { grid-template-columns: 1fr; }
   .dev-grid { grid-template-columns: repeat(2, 1fr); }
   .dev-card { padding: 28px 20px; }
-  .step-connector { display: none; }
-  .steps { flex-direction: column; }
+  .tech-grid { grid-template-columns: 1fr; }
+  .features-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+
+  /* Analytics */
+  .analytics-charts { flex-direction: column; }
+  .analytics-stats { grid-template-columns: repeat(2, 1fr); }
+
+  /* Admin per-user compare grid */
+  #userCompareContent > div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
 }
+
 @media (max-width: 768px) {
+  /* Nav */
   .nav-links, .nav-cta { display: none; }
   .nav-toggle { display: flex; }
-  .sidebar { transform: translateX(-100%); }
+  .nav-inner { gap: 12px; }
+
+  /* Mobile nav menu */
+  .nav-mobile-menu {
+    display: none;
+    position: fixed;
+    top: 64px; left: 0; right: 0;
+    background: rgba(10,15,30,0.98);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--card-border);
+    padding: 20px 24px;
+    flex-direction: column;
+    gap: 16px;
+    z-index: 999;
+    animation: fade-up 0.2s ease;
+  }
+  .nav-mobile-menu.open { display: flex; }
+  .nav-mobile-menu a {
+    color: var(--text-muted);
+    font-size: 1rem;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--card-border);
+  }
+  .nav-mobile-menu a:last-child { border-bottom: none; }
+  .nav-mobile-menu .btn-primary,
+  .nav-mobile-menu .btn-outline {
+    width: 100%;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Sidebar */
+  .sidebar {
+    transform: translateX(-100%);
+    z-index: 200;
+    width: 260px;
+  }
   .sidebar.open { transform: translateX(0); }
   .main-content { margin-left: 0; padding: 20px 16px; }
+
+  /* Dashboard nav */
+  .dash-nav-right {
+    gap: 8px !important;
+  }
+  #userGreeting { display: none !important; }
+  .dash-logout-btn { padding: 7px 12px !important; font-size: 0.8rem !important; }
+  .admin-badge { display: none !important; }
+
+  /* Forms */
   .form-row { grid-template-columns: 1fr; }
-  .hero-stats { gap: 20px; }
+  .auth-card { padding: 28px 20px; }
+
+  /* Hero */
+  .hero { padding: 90px 16px 48px; }
+  .hero-title { font-size: clamp(2rem, 8vw, 3rem); }
+  .hero-stats { flex-wrap: wrap; gap: 16px; }
+  .stat-num { font-size: 1.6rem; }
+
+  /* Sections */
+  .section { padding: 56px 16px; }
+  .cta-box { padding: 48px 20px; }
+
+  /* Dev grid */
+  .dev-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .dev-card { padding: 20px 14px; }
+  .avatar-ring { width: 80px; height: 80px; }
+  .avatar-inner { inset: 8px; font-size: 1rem; }
+
+  /* Dashboard panels */
+  .dash-header h1 { font-size: 1.4rem; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .stat-card-value { font-size: 1.4rem; }
+  .analytics-stats { grid-template-columns: repeat(2, 1fr); }
+
+  /* History table — hide less important cols */
+  .history-table .col-hide-sm { display: none; }
+
+  /* Chatbot */
+  .chatbot-window {
+    right: 12px;
+    left: 12px;
+    width: auto;
+    bottom: 90px;
+  }
+  .chatbot-fab { bottom: 20px; right: 16px; }
+
+  /* File viewer modal */
+  #fileViewerOverlay > div { padding: 20px 16px !important; margin: 12px !important; }
+
+  /* Admin tabs wrap */
+  .admin-tabs { gap: 6px; }
+  .admin-tab { padding: 7px 14px; font-size: 0.8rem; }
+}
+
+@media (max-width: 480px) {
+  /* Nav */
+  .logo { font-size: 1.1rem; }
+  .logo-icon { font-size: 1.3rem; }
+
+  /* Hero */
+  .hero { padding: 80px 14px 40px; }
+  .hero-actions { flex-direction: column; align-items: stretch; }
+  .hero-actions .btn-primary,
+  .hero-actions .btn-ghost { justify-content: center; width: 100%; }
+  .hero-stats { gap: 12px; }
+  .stat-num { font-size: 1.4rem; }
+
+  /* Auth */
+  .auth-card { padding: 24px 16px; border-radius: 16px; }
+  .auth-title { font-size: 1.3rem; }
+
+  /* Dev grid — single column on very small screens */
+  .dev-grid { grid-template-columns: 1fr; }
+
+  /* Dashboard */
+  .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-card { padding: 14px 16px; }
+  .stat-card-value { font-size: 1.2rem; }
+  .analytics-stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .main-content { padding: 16px 12px; }
+
+  /* Panel card */
+  .panel-card { padding: 16px; }
+
+  /* Result value */
+  .result-value { font-size: 2.2rem; }
+
+  /* CTA */
+  .cta-actions { flex-direction: column; align-items: stretch; }
+  .cta-actions .btn-primary,
+  .cta-actions .btn-outline { justify-content: center; }
+
+  /* Chatbot */
+  .chatbot-window { right: 8px; left: 8px; }
+  .chatbot-fab { bottom: 16px; right: 12px; width: 48px; height: 48px; font-size: 1.2rem; }
+
+  /* Admin nav buttons */
+  .admin-nav-btns { flex-direction: column; gap: 6px !important; }
+  .admin-nav-btns a,
+  .admin-nav-btns button { font-size: 0.78rem !important; padding: 6px 10px !important; }
 }

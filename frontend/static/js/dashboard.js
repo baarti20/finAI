@@ -22,14 +22,8 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   // Sidebar toggle (mobile)
   document.getElementById('sidebarToggle')?.addEventListener('click', () => {
-    document.getElementById('sidebar').classList.toggle('open');
-  });
-  document.addEventListener('click', e => {
-    const sidebar = document.getElementById('sidebar');
-    const toggle = document.getElementById('sidebarToggle');
-    if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && e.target !== toggle) {
-      sidebar.classList.remove('open');
-    }
+    const open = document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebarBackdrop')?.classList.toggle('show', open);
   });
 
   await loadProfile();
@@ -44,6 +38,7 @@ function showPanel(name) {
   const links = document.querySelectorAll('.sidebar-link');
   links.forEach(l => { if (l.textContent.toLowerCase().includes(name)) l.classList.add('active'); });
   document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarBackdrop')?.classList.remove('show');
 }
 
 // ── Quick fill ─────────────────────────────────────────────────────
@@ -730,4 +725,9 @@ function logout() {
   localStorage.removeItem('finai_token');
   localStorage.removeItem('finai_user');
   window.location.href = '/login';
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar')?.classList.remove('open');
+  document.getElementById('sidebarBackdrop')?.classList.remove('show');
 }

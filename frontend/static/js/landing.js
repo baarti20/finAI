@@ -8,12 +8,18 @@ window.addEventListener('scroll', () => {
 
 // ── Mobile nav toggle ──────────────────────────────────────────────
 const toggle = document.getElementById('navToggle');
-if (toggle) {
+const mobileMenu = document.getElementById('navMobileMenu');
+if (toggle && mobileMenu) {
   toggle.addEventListener('click', () => {
-    const links = document.querySelector('.nav-links');
-    const cta = document.querySelector('.nav-cta');
-    if (links) links.style.display = links.style.display === 'flex' ? 'none' : 'flex';
-    if (cta) cta.style.display = cta.style.display === 'flex' ? 'none' : 'flex';
+    mobileMenu.classList.toggle('open');
+    toggle.textContent = mobileMenu.classList.contains('open') ? '✕' : '☰';
+  });
+  // Close on link click
+  mobileMenu.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      mobileMenu.classList.remove('open');
+      toggle.textContent = '☰';
+    });
   });
 }
 

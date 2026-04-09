@@ -19,14 +19,15 @@
 <nav class="nav scrolled">
   <div class="nav-inner">
     <a href="/" class="logo"><span class="logo-icon">◈</span><span>Fin<em>AI</em></span></a>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:16px;">
+    <div class="dash-nav-right" style="margin-left:auto;display:flex;align-items:center;gap:16px;">
       <span id="userGreeting" style="color:var(--text-muted);font-size:0.9rem"></span>
-      <button class="btn-outline" onclick="logout()" style="padding:8px 18px;font-size:0.85rem">Logout</button>
+      <button class="btn-outline dash-logout-btn" onclick="logout()" style="padding:8px 18px;font-size:0.85rem">Logout</button>
     </div>
-    <button class="nav-toggle" id="sidebarToggle">☰</button>
+    <button class="nav-toggle" id="sidebarToggle" aria-label="Toggle sidebar">☰</button>
   </div>
 </nav>
 
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
 <div class="dash-layout">
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
@@ -255,10 +256,10 @@
                 <th>#</th>
                 <th>Date</th>
                 <th>Income</th>
-                <th>Total Expenses</th>
-                <th>Savings Goal</th>
+                <th class="col-hide-sm">Total Expenses</th>
+                <th class="col-hide-sm">Savings Goal</th>
                 <th>Predicted Savings</th>
-                <th>Model</th>
+                <th class="col-hide-sm">Model</th>
                 <th>File</th>
               </tr>
             </thead>
