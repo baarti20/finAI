@@ -188,3 +188,4 @@ frontend/static/dist/
 ```
 
 > If you publish only the frontend to GitHub Pages, do not commit backend files like `backend/finai.db`, `backend/models/artifacts/`, or any local env files.
+
