@@ -24,7 +24,7 @@ function setLoading(on) {
 
 function setFieldState(input, hint, msg, ok) {
   input.style.borderColor = msg ? (ok ? 'var(--green)' : 'var(--danger)') : '';
-  input.style.boxShadow   = msg ? (ok ? '0 0 0 3px rgba(0,212,170,0.15)' : '0 0 0 3px rgba(239,68,68,0.15)') : '';
+  input.style.boxShadow   = msg ? (ok ? '0 0 0 3px rgba(125,47,47,0.2)' : '0 0 0 3px rgba(125,47,47,0.2)') : '';
   if (hint) { hint.textContent = msg; hint.style.color = ok ? 'var(--green)' : 'var(--danger)'; }
 }
 
@@ -53,7 +53,7 @@ function updateStrengthBar(pwd) {
   if (!fill) return;
   const s = pwdStrength(pwd);
   const pct = (s / 5) * 100;
-  const color = s <= 1 ? '#ef4444' : s <= 3 ? '#f59e0b' : '#00d4aa';
+  const color = s <= 1 ? '#7d2f2f' : s <= 3 ? '#6b2121' : '#7d2f2f';
   fill.style.width = pct + '%';
   fill.style.background = color;
 }
@@ -195,12 +195,12 @@ async function doRegister() {
 }
 
 // ── Forgot Password Modal ──────────────────────────────────────────────────
-let _fpEmail = '', _fpDob = '';
+let _fpEmail = '', _fpPhone = '';
 
 function openForgotModal() {
-  _fpEmail = ''; _fpDob = '';
+  _fpEmail = ''; _fpPhone = '';
   ['fpStep1','fpStep2','fpStep3'].forEach((id,i) => document.getElementById(id).style.display = i===0?'block':'none');
-  ['fpEmail','fpDob','fpNewPwd','fpConfirmPwd'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  ['fpEmail','fpPhone','fpNewPwd','fpConfirmPwd'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   fpClearMsgs();
   document.getElementById('forgotOverlay').style.display = 'flex';
 }
@@ -247,18 +247,18 @@ async function fpVerifyEmail() {
   finally { fpSetLoading(1, false); }
 }
 
-async function fpVerifyDob() {
-  const dob = document.getElementById('fpDob').value;
-  if (!dob) return fpShowError('Please enter your date of birth.');
+async function fpVerifyPhone() {
+  const phone = document.getElementById('fpPhone').value.trim();
+  if (!phone) return fpShowError('Please enter your phone number.');
   fpSetLoading(2, true); fpClearMsgs();
   try {
-    const res = await fetch(`${API}/auth/verify-dob`, {
+    const res = await fetch(`${API}/auth/verify-phone`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: _fpEmail, dob })
+      body: JSON.stringify({ email: _fpEmail, phone })
     });
     const data = await res.json();
     if (!res.ok) return fpShowError(data.error || 'Verification failed.');
-    _fpDob = dob;
+    _fpPhone = phone;
     document.getElementById('fpStep2').style.display = 'none';
     document.getElementById('fpStep3').style.display = 'block';
     fpClearMsgs();
@@ -271,7 +271,7 @@ function updateStrengthBar2(pwd) {
   if (!fill) return;
   const s = pwdStrength(pwd);
   fill.style.width = (s/5*100) + '%';
-  fill.style.background = s<=1?'#ef4444':s<=3?'#f59e0b':'#00d4aa';
+  fill.style.background = s<=1?'#7d2f2f':s<=3?'#6b2121':'#7d2f2f';
 }
 
 async function fpResetPassword() {
@@ -283,7 +283,7 @@ async function fpResetPassword() {
   try {
     const res = await fetch(`${API}/auth/reset-password`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: _fpEmail, dob: _fpDob, password: pwd })
+      body: JSON.stringify({ email: _fpEmail, phone: _fpPhone, password: pwd })
     });
     const data = await res.json();
     if (!res.ok) return fpShowError(data.error || 'Reset failed.');
@@ -315,3 +315,7 @@ document.addEventListener('keydown', e => {
   if (p === '/login' || p === '/register')
     window.location.href = u.role === 'admin' ? '/admin' : '/dashboard';
 })();
+
+
+
+

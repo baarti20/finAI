@@ -111,8 +111,8 @@ function renderAdminChart(lr, rf) {
             Math.max(0, 10 - (lr.mae || 0) / 1000),
             Math.max(0, 10 - (lr.rmse || 0) / 1000),
           ],
-          backgroundColor: 'rgba(0,102,255,0.6)',
-          borderColor: '#0066ff', borderWidth: 1.5, borderRadius: 6
+          backgroundColor: 'rgba(126,168,0,0.6)',
+          borderColor: '#7ea800', borderWidth: 1.5, borderRadius: 6
         },
         {
           label: 'Random Forest',
@@ -121,17 +121,17 @@ function renderAdminChart(lr, rf) {
             Math.max(0, 10 - (rf.mae || 0) / 1000),
             Math.max(0, 10 - (rf.rmse || 0) / 1000),
           ],
-          backgroundColor: 'rgba(0,212,170,0.6)',
-          borderColor: '#00d4aa', borderWidth: 1.5, borderRadius: 6
+          backgroundColor: 'rgba(124,164,26,0.6)',
+          borderColor: '#98b933', borderWidth: 1.5, borderRadius: 6
         }
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { labels: { color: '#94a3b8' } } },
+      plugins: { legend: { labels: { color: 'var(--text)' } } },
       scales: {
-        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' }, max: 10 },
-        x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'var(--text)' }, max: 10 },
+        x: { grid: { display: false }, ticks: { color: 'var(--text)' } }
       },
       animation: { duration: 1000, easing: 'easeOutQuart' }
     }
@@ -197,7 +197,7 @@ async function loadPredictions() {
         <td><span class="status-badge user" style="font-size:0.7rem">${p.model_used.replace(/_/g, ' ')}</span></td>
         <td>${p.file_name
           ? `<button onclick='openFileViewer(${JSON.stringify(p.file_name)}, ${JSON.stringify(p.file_data)})'
-               style="background:rgba(0,212,170,0.1);border:1px solid rgba(0,212,170,0.3);color:var(--green);border-radius:6px;padding:3px 10px;font-size:0.75rem;cursor:pointer">
+               style="background:rgba(125,47,47,0.18);border:1px solid rgba(125,47,47,0.35);color:var(--green);border-radius:6px;padding:3px 10px;font-size:0.75rem;cursor:pointer">
                📎 ${p.file_name}</button>`
           : '<span style="color:var(--text-dim);font-size:0.78rem">—</span>'}
         </td>
@@ -252,14 +252,14 @@ function renderUserModelCompare() {
     data: {
       labels: ['R²', 'Low MAE', 'Low RMSE', 'Speed', 'Interpretability'],
       datasets: [
-        { label: 'Linear Regression', data: [(lr.r2||0)*10, 10-(lr.mae||0)/2000, 10-(lr.rmse||0)/2000, 9, 9], borderColor: '#0066ff', backgroundColor: 'rgba(0,102,255,0.1)', pointBackgroundColor: '#0066ff' },
-        { label: 'Random Forest',     data: [(rf.r2||0)*10, 10-(rf.mae||0)/2000, 10-(rf.rmse||0)/2000, 6, 5], borderColor: '#00d4aa', backgroundColor: 'rgba(0,212,170,0.1)', pointBackgroundColor: '#00d4aa' }
+        { label: 'Linear Regression', data: [(lr.r2||0)*10, 10-(lr.mae||0)/2000, 10-(lr.rmse||0)/2000, 9, 9], borderColor: '#7ea800', backgroundColor: 'rgba(126,168,0,0.16)', pointBackgroundColor: '#7ea800' },
+        { label: 'Random Forest',     data: [(rf.r2||0)*10, 10-(rf.mae||0)/2000, 10-(rf.rmse||0)/2000, 6, 5], borderColor: '#98b933', backgroundColor: 'rgba(124,164,26,0.18)', pointBackgroundColor: '#98b933' }
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } },
-      scales: { r: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#64748b', stepSize: 2, backdropColor: 'transparent' }, pointLabels: { color: '#94a3b8', font: { size: 11 } }, min: 0, max: 10 } }
+      plugins: { legend: { labels: { color: 'var(--text)', font: { size: 11 } } } },
+      scales: { r: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: 'var(--text)', stepSize: 2, backdropColor: 'transparent' }, pointLabels: { color: 'var(--text)', font: { size: 11 } }, min: 0, max: 10 } }
     }
   });
 }
@@ -365,3 +365,7 @@ function logout() {
   localStorage.removeItem('finai_user');
   window.location.href = '/login';
 }
+
+
+
+

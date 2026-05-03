@@ -112,7 +112,7 @@
             </div>
 
             <!-- File Import -->
-            <div style="margin-top:12px;padding:12px;border:1.5px dashed rgba(0,102,255,0.35);border-radius:10px;background:rgba(0,102,255,0.04)">
+            <div style="margin-top:12px;padding:12px;border:1.5px dashed rgba(125,47,47,0.55);border-radius:10px;background:rgba(125,47,47,0.12)">
               <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:8px">📂 Import from file — auto-fills the form</div>
               <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
                 <label class="btn-outline" style="padding:7px 14px;font-size:0.82rem;cursor:pointer;margin:0">
@@ -124,7 +124,7 @@
                   <input type="file" id="importNote" accept=".txt,.csv" style="display:none" onchange="handleFileImport(this,'text')"/>
                 </label>
               </div>
-              <div id="fileChip" style="display:none;margin-top:8px;align-items:center;gap:8px;padding:6px 10px;background:rgba(0,212,170,0.1);border:1px solid rgba(0,212,170,0.3);border-radius:8px;width:fit-content">
+              <div id="fileChip" style="display:none;margin-top:8px;align-items:center;gap:8px;padding:6px 10px;background:rgba(125,47,47,0.18);border:1px solid rgba(125,47,47,0.35);border-radius:8px;width:fit-content">
                 <span style="font-size:0.85rem">📎</span>
                 <span id="fileChipName" style="font-size:0.82rem;color:var(--green);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
                 <button onclick="cancelFileImport()" title="Remove file" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:0.9rem;padding:0 2px;line-height:1" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-dim)'">✕</button>
@@ -204,15 +204,15 @@
       <!-- Stat cards -->
       <div class="analytics-stats">
         <div class="analytics-stat-card">
-          <div class="asc-icon" style="background:rgba(0,102,255,0.15)">💰</div>
+          <div class="asc-icon" style="background:rgba(92,19,19,0.15)">💰</div>
           <div><div class="asc-label">Income</div><div class="asc-value" id="aAvgIncome">—</div></div>
         </div>
         <div class="analytics-stat-card">
-          <div class="asc-icon" style="background:rgba(239,68,68,0.15)">💸</div>
+          <div class="asc-icon" style="background:rgba(125,47,47,0.2)">💸</div>
           <div><div class="asc-label">Expenses</div><div class="asc-value" id="aAvgExp">—</div></div>
         </div>
         <div class="analytics-stat-card">
-          <div class="asc-icon" style="background:rgba(16,185,129,0.15)">💹</div>
+          <div class="asc-icon" style="background:rgba(107,33,33,0.24)">💹</div>
           <div><div class="asc-label">Predicted Savings</div><div class="asc-value" id="aAvgSav">—</div></div>
         </div>
         <div class="analytics-stat-card">
@@ -259,7 +259,6 @@
                 <th class="col-hide-sm">Total Expenses</th>
                 <th class="col-hide-sm">Savings Goal</th>
                 <th>Predicted Savings</th>
-                <th class="col-hide-sm">Model</th>
                 <th>File</th>
               </tr>
             </thead>
@@ -323,7 +322,7 @@
 </div>
 
 <!-- File Viewer Modal -->
-<div id="fileViewerOverlay" style="display:none;position:fixed;inset:0;background:rgba(4,8,16,0.88);backdrop-filter:blur(6px);z-index:2000;align-items:center;justify-content:center">
+<div id="fileViewerOverlay" style="display:none;position:fixed;inset:0;background:rgba(26,3,3,0.82);z-index:2000;align-items:center;justify-content:center">
   <div style="background:var(--bg2);border:1px solid var(--card-border);border-radius:20px;padding:32px;width:100%;max-width:640px;margin:20px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,0.5);animation:fade-up 0.3s ease">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
       <div>
@@ -343,3 +342,6 @@
 <script src="/static/js/dashboard.js"></script>
 </body>
 </html>
+
+
+

@@ -11,7 +11,6 @@ from routes.api import api
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FRONTEND = os.path.join(BASE_DIR, '..', 'frontend')
 
-
 def create_app():
     app = Flask(__name__, static_folder=os.path.join(FRONTEND, 'static'))
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'finai-flask-secret')
@@ -64,6 +63,11 @@ def create_app():
     @app.route('/static/<path:filename>')
     def static_files(filename):
         return send_from_directory(os.path.join(FRONTEND, 'static'), filename)
+
+    # Serve well-known app-specific configuration used by Chrome DevTools
+    @app.route('/.well-known/<path:filename>')
+    def well_known(filename):
+        return send_from_directory(os.path.join(FRONTEND, 'static', '.well-known'), filename)
 
     return app
 

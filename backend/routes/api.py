@@ -105,20 +105,37 @@ def verify_dob():
     return jsonify({'verified': True})
 
 
+@api.route('/auth/verify-phone', methods=['POST'])
+def verify_phone():
+    d = request.get_json(force=True)
+    email = (d.get('email') or '').strip().lower()
+    phone = (d.get('phone') or '').strip()
+    if not email or not phone:
+        return jsonify({'error': 'Email and phone number required'}), 400
+    user = get_user_by_email(email)
+    if not user:
+        return jsonify({'error': 'No account found with that email'}), 404
+    if not user.get('phone'):
+        return jsonify({'error': 'No phone number set for this account'}), 400
+    if user['phone'] != phone:
+        return jsonify({'error': 'Phone number does not match'}), 401
+    return jsonify({'verified': True})
+
+
 @api.route('/auth/reset-password', methods=['POST'])
 def do_reset_password():
     d = request.get_json(force=True)
     email    = (d.get('email') or '').strip().lower()
-    dob      = (d.get('dob') or '').strip()
+    phone    = (d.get('phone') or '').strip()
     password = d.get('password') or ''
-    if not email or not dob or not password:
+    if not email or not phone or not password:
         return jsonify({'error': 'All fields required'}), 400
     if len(password) < 6:
         return jsonify({'error': 'Password must be at least 6 characters'}), 400
     user = get_user_by_email(email)
     if not user:
         return jsonify({'error': 'No account found with that email'}), 404
-    if not user.get('dob') or user['dob'] != dob:
+    if not user.get('phone') or user['phone'] != phone:
         return jsonify({'error': 'Verification failed'}), 401
     reset_password(email, password)
     return jsonify({'message': 'Password reset successfully'})

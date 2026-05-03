@@ -1,6 +1,6 @@
 # ◈ FinAI — AI Financial Prediction System
 
-A production-ready, full-stack AI-powered financial prediction platform built with Python Flask, Scikit-learn, and Vanilla JS. Features a dark glassmorphism UI, dual ML models, JWT authentication, INR currency support, file import for predictions, forgot password recovery, interactive analytics, admin panel, and PDF report generation.
+A production-ready, full-stack AI-powered financial prediction platform built with Python Flask, Scikit-learn, and JS. Features a dark glassmorphism UI, dual ML models, JWT authentication, INR currency support, file import for predictions, forgot password recovery, interactive analytics, admin panel, and PDF report generation.
 
 ---
 
@@ -126,13 +126,14 @@ reportlab==4.2.2
 ## 🌐 API Endpoints
 
 ### Auth
-| Method | Endpoint                 | Description                            | Auth Required |
-|--------|--------------------------|----------------------------------------|---------------|
-| POST   | /api/auth/register       | Register new user (full profile + DOB) | No            |
-| POST   | /api/auth/login          | Login, get JWT                         | No            |
-| GET    | /api/auth/me             | Get current user                       | Yes           |
-| POST   | /api/auth/verify-dob     | Verify email + DOB for password reset  | No            |
-| POST   | /api/auth/reset-password | Reset password after DOB verification  | No            |
+| Method | Endpoint                 | Description                                  | Auth Required |
+|--------|--------------------------|----------------------------------------------|---------------|
+| POST   | /api/auth/register       | Register new user (full profile + DOB)       | No            |
+| POST   | /api/auth/login          | Login, get JWT                               | No            |
+| GET    | /api/auth/me             | Get current user                             | Yes           |
+| POST   | /api/auth/verify-dob     | Verify email + DOB for account recovery      | No            |
+| POST   | /api/auth/verify-phone   | Verify email + phone for password recovery   | No            |
+| POST   | /api/auth/reset-password | Reset password after phone verification      | No            |
 
 ### Predictions
 | Method | Endpoint                 | Description                          | Auth Required |
@@ -271,7 +272,7 @@ reportlab==4.2.2
 | Model            | Config                                                              |
 |------------------|---------------------------------------------------------------------|
 | LinearRegression | StandardScaler + sklearn LinearRegression                           |
-| RandomForest     | 150 trees, max_depth=12, min_samples_split=5, n_jobs=-1, seed=42   |
+| RandomForest     | 150 trees, max_depth=12, min_samples_split=5, n_jobs=-1, seed=42    |
 
 Best model selected automatically by R² on 20% holdout test set. Both predictions are always returned for comparison.
 
@@ -302,7 +303,7 @@ Rule-based insights generated per prediction covering:
 - ✅ Full registration — Full Name, Username, Email, Password, DOB, Phone, Gender, City
 - ✅ After registration → redirected to login page
 - ✅ SHA256 password hashing
-- ✅ Forgot Password — 3-step modal: email → DOB verify → new password
+- ✅ Forgot Password — 3-step modal: email → phone verify → new password
 - ✅ Client-side validation: email format, username rules, password strength meter, phone format, confirm password match
 - ✅ Show/hide password toggle on all password fields
 

@@ -142,12 +142,12 @@ function renderResultChart(income, expenses, savings, goal) {
       datasets: [{
         data: [income, expenses, Math.max(savings, 0), goal],
         backgroundColor: [
-          'rgba(0,102,255,0.7)',
-          'rgba(239,68,68,0.7)',
-          'rgba(16,185,129,0.7)',
-          'rgba(245,158,11,0.7)',
+          'rgba(126,168,0,0.7)',
+          'rgba(124,164,26,0.7)',
+          'rgba(126,168,0,0.7)',
+          'rgba(126,168,0,0.7)',
         ],
-        borderColor: ['#0066ff','#ef4444','#10b981','#f59e0b'],
+        borderColor: ['#7ea800','#98b933','#7ea800','#7ea800'],
         borderWidth: 1.5,
         borderRadius: 6,
       }]
@@ -158,11 +158,11 @@ function renderResultChart(income, expenses, savings, goal) {
       scales: {
         y: {
           grid: { color: 'rgba(255,255,255,0.05)' },
-          ticks: { color: '#94a3b8', callback: v => '₹' + (v/1000).toFixed(0) + 'k' }
+          ticks: { color: 'var(--text)', callback: v => '₹' + (v/1000).toFixed(0) + 'k' }
         },
         x: {
           grid: { display: false },
-          ticks: { color: '#94a3b8', font: { size: 11 }, maxRotation: 0, minRotation: 0 }
+          ticks: { color: 'var(--text)', font: { size: 11 }, maxRotation: 0, minRotation: 0 }
         }
       },
       animation: { duration: 800, easing: 'easeOutQuart' }
@@ -208,7 +208,7 @@ async function loadHistory() {
 function renderHistory(preds) {
   const tbody = document.getElementById('historyBody');
   if (!preds.length) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-dim);padding:40px">No predictions yet. Run your first prediction!</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:40px">No predictions yet. Run your first prediction!</td></tr>';
     return;
   }
   tbody.innerHTML = preds.map((p, i) => `
@@ -221,10 +221,9 @@ function renderHistory(preds) {
       <td style="color:${p.predicted_savings >= 0 ? 'var(--success)' : 'var(--danger)'}">
         ${formatINR(p.predicted_savings * USD_TO_INR)}
       </td>
-      <td><span class="status-badge user" style="font-size:0.7rem">${p.model_used.replace(/_/g,' ')}</span></td>
       <td>${p.file_name
         ? `<button onclick='openFileViewer(${JSON.stringify(p.file_name)}, ${JSON.stringify(p.file_data)})'
-             style="background:rgba(0,212,170,0.1);border:1px solid rgba(0,212,170,0.3);color:var(--green);border-radius:6px;padding:3px 10px;font-size:0.75rem;cursor:pointer">
+             style="background:rgba(125,47,47,0.18);border:1px solid rgba(125,47,47,0.35);color:var(--green);border-radius:6px;padding:3px 10px;font-size:0.75rem;cursor:pointer">
              📎 ${p.file_name}</button>`
         : '<span style="color:var(--text-dim);font-size:0.78rem">—</span>'}
       </td>
@@ -299,12 +298,12 @@ function renderCurrentMode(preds) {
     data: {
       labels: [['Income'], ['Expenses'], ['Predicted','Savings'], ['Savings','Goal']],
       datasets: [{ label: 'Current', data: [inc, exp, Math.max(sav,0), goal],
-        backgroundColor: ['rgba(0,102,255,0.7)','rgba(239,68,68,0.7)','rgba(0,212,170,0.7)','rgba(245,158,11,0.7)'],
-        borderColor: ['#0066ff','#ef4444','#00d4aa','#f59e0b'], borderWidth: 1.5, borderRadius: 6 }]
+        backgroundColor: ['rgba(126,168,0,0.7)','rgba(124,164,26,0.7)','rgba(126,168,0,0.7)','rgba(126,168,0,0.7)'],
+        borderColor: ['#7ea800','#98b933','#7ea800','#7ea800'], borderWidth: 1.5, borderRadius: 6 }]
     },
     options: { responsive:true, maintainAspectRatio:false,
       plugins:{ legend:{display:false} },
-      scales:{ y:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#94a3b8', callback:v=>'\u20b9'+(v/1000).toFixed(0)+'k'} }, x:{grid:{display:false}, ticks:{color:'#94a3b8', maxRotation:0}} },
+      scales:{ y:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'var(--text)', callback:v=>'\u20b9'+(v/1000).toFixed(0)+'k'} }, x:{grid:{display:false}, ticks:{color:'var(--text)', maxRotation:0}} },
       animation:{duration:800,easing:'easeOutQuart'} }
   });
 
@@ -330,14 +329,14 @@ function renderHistoryMode(preds) {
   trendChartInst = new Chart(tCtx, {
     type: 'line',
     data: { labels, datasets: [
-      { label:'Income',   data:recent.map(p=>+(p.income*USD_TO_INR).toFixed(0)),   borderColor:'#0066ff', backgroundColor:'rgba(0,102,255,0.08)', tension:0.4, fill:true, pointRadius:4, pointBackgroundColor:'#0066ff' },
-      { label:'Expenses', data:recent.map(p=>+(p.total_expenses*USD_TO_INR).toFixed(0)), borderColor:'#ef4444', backgroundColor:'rgba(239,68,68,0.06)',  tension:0.4, fill:true, pointRadius:4, pointBackgroundColor:'#ef4444' },
-      { label:'Savings',  data:recent.map(p=>+(p.predicted_savings*USD_TO_INR).toFixed(0)), borderColor:'#00d4aa', backgroundColor:'rgba(0,212,170,0.08)', tension:0.4, fill:true, pointRadius:4, pointBackgroundColor:'#00d4aa' },
+      { label:'Income',   data:recent.map(p=>+(p.income*USD_TO_INR).toFixed(0)),   borderColor:'#7ea800', backgroundColor:'rgba(126,168,0,0.12)', tension:0.4, fill:true, pointRadius:4, pointBackgroundColor:'#7ea800' },
+      { label:'Expenses', data:recent.map(p=>+(p.total_expenses*USD_TO_INR).toFixed(0)), borderColor:'#98b933', backgroundColor:'rgba(124,164,26,0.08)',  tension:0.4, fill:true, pointRadius:4, pointBackgroundColor:'#98b933' },
+      { label:'Savings',  data:recent.map(p=>+(p.predicted_savings*USD_TO_INR).toFixed(0)), borderColor:'#6d9c1c', backgroundColor:'rgba(126,168,0,0.15)', tension:0.4, fill:true, pointRadius:4, pointBackgroundColor:'#6d9c1c' },
     ]},
     options:{ responsive:true, maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
-      plugins:{legend:{labels:{color:'#94a3b8',font:{size:11},boxWidth:12}}},
-      scales:{ y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#94a3b8',callback:v=>'\u20b9'+(v/1000).toFixed(0)+'k'}}, x:{grid:{display:false},ticks:{color:'#94a3b8'}} },
+      plugins:{legend:{labels:{color:'var(--text)',font:{size:11},boxWidth:12}}},
+      scales:{ y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'var(--text)',callback:v=>'\u20b9'+(v/1000).toFixed(0)+'k'}}, x:{grid:{display:false},ticks:{color:'var(--text)'}} },
       animation:{duration:900,easing:'easeOutQuart'} }
   });
 
@@ -367,18 +366,18 @@ function renderCompareMode(preds) {
   if (trendChartInst) trendChartInst.destroy();
 
   const datasets = [
-    { label:'Current', data:currData, backgroundColor:'rgba(0,102,255,0.7)', borderColor:'#0066ff', borderWidth:1.5, borderRadius:5 }
+    { label:'Current', data:currData, backgroundColor:'rgba(126,168,0,0.7)', borderColor:'#7ea800', borderWidth:1.5, borderRadius:5 }
   ];
   if (prev) datasets.push(
-    { label:`Past #${idx+1}`, data:prevData, backgroundColor:'rgba(0,212,170,0.6)', borderColor:'#00d4aa', borderWidth:1.5, borderRadius:5 }
+    { label:`Past #${idx+1}`, data:prevData, backgroundColor:'rgba(124,164,26,0.6)', borderColor:'#98b933', borderWidth:1.5, borderRadius:5 }
   );
 
   trendChartInst = new Chart(tCtx, {
     type:'bar',
     data:{ labels, datasets },
     options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{labels:{color:'#94a3b8',font:{size:11},boxWidth:12}}},
-      scales:{ y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#94a3b8',callback:v=>'\u20b9'+(v/1000).toFixed(0)+'k'}}, x:{grid:{display:false},ticks:{color:'#94a3b8',maxRotation:0}} },
+      plugins:{legend:{labels:{color:'var(--text)',font:{size:11},boxWidth:12}}},
+      scales:{ y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'var(--text)',callback:v=>'\u20b9'+(v/1000).toFixed(0)+'k'}}, x:{grid:{display:false},ticks:{color:'var(--text)',maxRotation:0}} },
       animation:{duration:800,easing:'easeOutQuart'} }
   });
 
@@ -398,10 +397,10 @@ function renderDonut(preds) {
     type:'doughnut',
     data:{ labels:['Fixed Exp','Variable Exp','Savings'],
       datasets:[{ data:[avgFixed,avgVariable,avgSav],
-        backgroundColor:['rgba(0,102,255,0.75)','rgba(239,68,68,0.75)','rgba(0,212,170,0.75)'],
-        borderColor:['#0066ff','#ef4444','#00d4aa'], borderWidth:1.5, hoverOffset:8 }] },
+        backgroundColor:['rgba(126,168,0,0.75)','rgba(124,164,26,0.75)','rgba(107,153,40,0.75)'],
+        borderColor:['#7ea800','#98b933','#6d9c1c'], borderWidth:1.5, hoverOffset:8 }] },
     options:{ responsive:true, maintainAspectRatio:false, cutout:'68%',
-      plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:11},boxWidth:12,padding:14}}},
+      plugins:{legend:{position:'bottom',labels:{color:'var(--text)',font:{size:11},boxWidth:12,padding:14}}},
       animation:{duration:900,easing:'easeOutQuart'} }
   });
 }
@@ -428,7 +427,7 @@ function renderBudgetHealth(curr, prev) {
   document.getElementById('budgetHealth').innerHTML = `
     <div class="bh-row">
       <div class="bh-label"><span>Expense Ratio${diff(curr,prev,'total_expenses')}</span><span style="color:${expRatio>70?'var(--danger)':'var(--success)'}">${expRatio.toFixed(1)}%</span></div>
-      <div class="bar-track"><div class="bar-fill" style="width:${expRatio}%;background:${expRatio>70?'linear-gradient(90deg,#ef4444,#f59e0b)':'linear-gradient(90deg,var(--blue),var(--green))'}"></div></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${expRatio}%;background:${expRatio>70?'linear-gradient(90deg,#7d2f2f,#6b2121)':'linear-gradient(90deg,var(--blue),var(--green))'}"></div></div>
     </div>
     <div class="bh-row">
       <div class="bh-label"><span>Savings Rate${diff(curr,prev,'predicted_savings')}</span><span style="color:${savRatio>=20?'var(--success)':'var(--warning)'}">${savRatio.toFixed(1)}%</span></div>
@@ -436,7 +435,7 @@ function renderBudgetHealth(curr, prev) {
     </div>
     <div class="bh-row">
       <div class="bh-label"><span>Goal Achievement</span><span style="color:${goalRatio>=100?'var(--success)':'var(--warning)'}">${goalRatio.toFixed(1)}%</span></div>
-      <div class="bar-track"><div class="bar-fill" style="width:${goalRatio}%;background:linear-gradient(90deg,#7c3aed,var(--green))"></div></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${goalRatio}%;background:linear-gradient(90deg,var(--olive-2),var(--green))"></div></div>
     </div>
   `;
 }
@@ -731,3 +730,6 @@ function closeSidebar() {
   document.getElementById('sidebar')?.classList.remove('open');
   document.getElementById('sidebarBackdrop')?.classList.remove('show');
 }
+
+
+
