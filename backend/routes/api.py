@@ -36,6 +36,10 @@ def register():
 
     if not username or not email or not password:
         return jsonify({'error': 'All fields required'}), 400
+    if email == 'admin@finai.com' or email.endswith('@finai.com'):
+        return jsonify({'error': 'finai.com email addresses are reserved for the admin account only'}), 400
+    if not email.endswith('@gmail.com'):
+        return jsonify({'error': 'Registration requires a gmail.com email address.'}), 400
     if len(password) < 6:
         return jsonify({'error': 'Password must be at least 6 characters'}), 400
 
@@ -59,9 +63,16 @@ def login():
     email = (d.get('email') or '').strip().lower()
     password = d.get('password') or ''
 
+    if email != 'admin@finai.com' and not email.endswith('@gmail.com'):
+        return jsonify({'error': 'Login requires gmail.com for users, or admin@finai.com for admin.'}), 400
+
     user = get_user_by_email(email)
     if not user or not verify_password(password, user['password_hash']):
         return jsonify({'error': 'Invalid email or password'}), 401
+    if email == 'admin@finai.com' and user.get('role') != 'admin':
+        return jsonify({'error': 'Admin login only allowed for admin@finai.com'}), 403
+    if email != 'admin@finai.com' and user.get('role') == 'admin':
+        return jsonify({'error': 'Use admin@finai.com to sign in as admin.'}), 403
 
     update_last_login(user['id'])
     token = create_token(user['id'], user['role'])

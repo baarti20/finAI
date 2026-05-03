@@ -1,4 +1,30 @@
+# Ignore Python artifacts
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+# Ignore local environment and package files
+venv/
+.env
+.env.*
+pip-wheel-metadata/
+*.egg-info/
+dist/
+build/
+
+# Ignore database and local application data
 *.db
-venv/   
+*.sqlite3
+*.log
+
+# Ignore backend/backend-related folders if publishing only frontend
+backend/
+data/
+ml/
+
+# Ignore editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

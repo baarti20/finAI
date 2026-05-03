@@ -142,12 +142,12 @@ function renderResultChart(income, expenses, savings, goal) {
       datasets: [{
         data: [income, expenses, Math.max(savings, 0), goal],
         backgroundColor: [
-          'rgba(126,168,0,0.7)',
-          'rgba(124,164,26,0.7)',
-          'rgba(126,168,0,0.7)',
-          'rgba(126,168,0,0.7)',
+          'rgba(111,168,166,0.85)',
+          'rgba(111,168,166,0.55)',
+          'rgba(111,168,166,0.85)',
+          'rgba(111,168,166,0.75)',
         ],
-        borderColor: ['#7ea800','#98b933','#7ea800','#7ea800'],
+        borderColor: ['#6FA8A6','#5C9C92','#6FA8A6','#6FA8A6'],
         borderWidth: 1.5,
         borderRadius: 6,
       }]
@@ -298,8 +298,8 @@ function renderCurrentMode(preds) {
     data: {
       labels: [['Income'], ['Expenses'], ['Predicted','Savings'], ['Savings','Goal']],
       datasets: [{ label: 'Current', data: [inc, exp, Math.max(sav,0), goal],
-        backgroundColor: ['rgba(126,168,0,0.7)','rgba(124,164,26,0.7)','rgba(126,168,0,0.7)','rgba(126,168,0,0.7)'],
-        borderColor: ['#7ea800','#98b933','#7ea800','#7ea800'], borderWidth: 1.5, borderRadius: 6 }]
+        backgroundColor: ['rgba(111,168,166,0.85)','rgba(111,168,166,0.55)','rgba(111,168,166,0.85)','rgba(111,168,166,0.75)'],
+        borderColor: ['#6FA8A6','#5C9C92','#6FA8A6','#6FA8A6'], borderWidth: 1.5, borderRadius: 6 }]
     },
     options: { responsive:true, maintainAspectRatio:false,
       plugins:{ legend:{display:false} },
@@ -329,9 +329,9 @@ function renderHistoryMode(preds) {
   trendChartInst = new Chart(tCtx, {
     type: 'line',
     data: { labels, datasets: [
-      { label:'Income',   data:recent.map(p=>+(p.income*USD_TO_INR).toFixed(0)),   borderColor:'#7ea800', backgroundColor:'rgba(126,168,0,0.12)', tension:0.4, fill:true, pointRadius:4, pointBackgroundColor:'#7ea800' },
-      { label:'Expenses', data:recent.map(p=>+(p.total_expenses*USD_TO_INR).toFixed(0)), borderColor:'#98b933', backgroundColor:'rgba(124,164,26,0.08)',  tension:0.4, fill:true, pointRadius:4, pointBackgroundColor:'#98b933' },
-      { label:'Savings',  data:recent.map(p=>+(p.predicted_savings*USD_TO_INR).toFixed(0)), borderColor:'#6d9c1c', backgroundColor:'rgba(126,168,0,0.15)', tension:0.4, fill:true, pointRadius:4, pointBackgroundColor:'#6d9c1c' },
+      { label:'Income',   data:recent.map(p=>+(p.income*USD_TO_INR).toFixed(0)),   borderColor:'#6FA8A6', backgroundColor:'rgba(111,168,166,0.16)', tension:0.4, fill:true, pointRadius:4, pointBackgroundColor:'#6FA8A6' },
+      { label:'Expenses', data:recent.map(p=>+(p.total_expenses*USD_TO_INR).toFixed(0)), borderColor:'#5C9C92', backgroundColor:'rgba(92,156,146,0.08)',  tension:0.4, fill:true, pointRadius:4, pointBackgroundColor:'#5C9C92' },
+      { label:'Savings',  data:recent.map(p=>+(p.predicted_savings*USD_TO_INR).toFixed(0)), borderColor:'#3A7B72', backgroundColor:'rgba(58,123,114,0.15)', tension:0.4, fill:true, pointRadius:4, pointBackgroundColor:'#3A7B72' },
     ]},
     options:{ responsive:true, maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
@@ -366,10 +366,10 @@ function renderCompareMode(preds) {
   if (trendChartInst) trendChartInst.destroy();
 
   const datasets = [
-    { label:'Current', data:currData, backgroundColor:'rgba(126,168,0,0.7)', borderColor:'#7ea800', borderWidth:1.5, borderRadius:5 }
+    { label:'Current', data:currData, backgroundColor:'rgba(111,168,166,0.85)', borderColor:'#6FA8A6', borderWidth:1.5, borderRadius:5 }
   ];
   if (prev) datasets.push(
-    { label:`Past #${idx+1}`, data:prevData, backgroundColor:'rgba(124,164,26,0.6)', borderColor:'#98b933', borderWidth:1.5, borderRadius:5 }
+    { label:`Past #${idx+1}`, data:prevData, backgroundColor:'rgba(92,156,146,0.6)', borderColor:'#5C9C92', borderWidth:1.5, borderRadius:5 }
   );
 
   trendChartInst = new Chart(tCtx, {
@@ -397,8 +397,8 @@ function renderDonut(preds) {
     type:'doughnut',
     data:{ labels:['Fixed Exp','Variable Exp','Savings'],
       datasets:[{ data:[avgFixed,avgVariable,avgSav],
-        backgroundColor:['rgba(126,168,0,0.75)','rgba(124,164,26,0.75)','rgba(107,153,40,0.75)'],
-        borderColor:['#7ea800','#98b933','#6d9c1c'], borderWidth:1.5, hoverOffset:8 }] },
+        backgroundColor:['rgba(111,168,166,0.85)','rgba(92,156,146,0.75)','rgba(58,123,114,0.75)'],
+        borderColor:['#6FA8A6','#5C9C92','#3A7B72'], borderWidth:1.5, hoverOffset:8 }] },
     options:{ responsive:true, maintainAspectRatio:false, cutout:'68%',
       plugins:{legend:{position:'bottom',labels:{color:'var(--text)',font:{size:11},boxWidth:12,padding:14}}},
       animation:{duration:900,easing:'easeOutQuart'} }
@@ -427,15 +427,15 @@ function renderBudgetHealth(curr, prev) {
   document.getElementById('budgetHealth').innerHTML = `
     <div class="bh-row">
       <div class="bh-label"><span>Expense Ratio${diff(curr,prev,'total_expenses')}</span><span style="color:${expRatio>70?'var(--danger)':'var(--success)'}">${expRatio.toFixed(1)}%</span></div>
-      <div class="bar-track"><div class="bar-fill" style="width:${expRatio}%;background:${expRatio>70?'linear-gradient(90deg,#7d2f2f,#6b2121)':'linear-gradient(90deg,var(--blue),var(--green))'}"></div></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${expRatio}%;background:${expRatio>70?'linear-gradient(90deg,#7d2f2f,#6b2121)':'linear-gradient(90deg,#6FA8A6,#5C9C92)'}"></div></div>
     </div>
     <div class="bh-row">
       <div class="bh-label"><span>Savings Rate${diff(curr,prev,'predicted_savings')}</span><span style="color:${savRatio>=20?'var(--success)':'var(--warning)'}">${savRatio.toFixed(1)}%</span></div>
-      <div class="bar-track"><div class="bar-fill" style="width:${savRatio}%;background:linear-gradient(90deg,var(--blue),var(--green))"></div></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${savRatio}%;background:linear-gradient(90deg,#6FA8A6,#4B8D84)"></div></div>
     </div>
     <div class="bh-row">
       <div class="bh-label"><span>Goal Achievement</span><span style="color:${goalRatio>=100?'var(--success)':'var(--warning)'}">${goalRatio.toFixed(1)}%</span></div>
-      <div class="bar-track"><div class="bar-fill" style="width:${goalRatio}%;background:linear-gradient(90deg,var(--olive-2),var(--green))"></div></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${goalRatio}%;background:linear-gradient(90deg,#6FA8A6,#8EC5C0)"></div></div>
     </div>
   `;
 }

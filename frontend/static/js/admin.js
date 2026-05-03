@@ -111,8 +111,8 @@ function renderAdminChart(lr, rf) {
             Math.max(0, 10 - (lr.mae || 0) / 1000),
             Math.max(0, 10 - (lr.rmse || 0) / 1000),
           ],
-          backgroundColor: 'rgba(126,168,0,0.6)',
-          borderColor: '#7ea800', borderWidth: 1.5, borderRadius: 6
+          backgroundColor: 'rgba(111,168,166,0.85)',
+          borderColor: '#6FA8A6', borderWidth: 1.5, borderRadius: 6
         },
         {
           label: 'Random Forest',
@@ -121,8 +121,8 @@ function renderAdminChart(lr, rf) {
             Math.max(0, 10 - (rf.mae || 0) / 1000),
             Math.max(0, 10 - (rf.rmse || 0) / 1000),
           ],
-          backgroundColor: 'rgba(124,164,26,0.6)',
-          borderColor: '#98b933', borderWidth: 1.5, borderRadius: 6
+          backgroundColor: 'rgba(92,156,146,0.6)',
+          borderColor: '#5C9C92', borderWidth: 1.5, borderRadius: 6
         }
       ]
     },
@@ -252,8 +252,8 @@ function renderUserModelCompare() {
     data: {
       labels: ['R²', 'Low MAE', 'Low RMSE', 'Speed', 'Interpretability'],
       datasets: [
-        { label: 'Linear Regression', data: [(lr.r2||0)*10, 10-(lr.mae||0)/2000, 10-(lr.rmse||0)/2000, 9, 9], borderColor: '#7ea800', backgroundColor: 'rgba(126,168,0,0.16)', pointBackgroundColor: '#7ea800' },
-        { label: 'Random Forest',     data: [(rf.r2||0)*10, 10-(rf.mae||0)/2000, 10-(rf.rmse||0)/2000, 6, 5], borderColor: '#98b933', backgroundColor: 'rgba(124,164,26,0.18)', pointBackgroundColor: '#98b933' }
+        { label: 'Linear Regression', data: [(lr.r2||0)*10, 10-(lr.mae||0)/2000, 10-(lr.rmse||0)/2000, 9, 9], borderColor: '#6FA8A6', backgroundColor: 'rgba(111,168,166,0.16)', pointBackgroundColor: '#6FA8A6' },
+        { label: 'Random Forest',     data: [(rf.r2||0)*10, 10-(rf.mae||0)/2000, 10-(rf.rmse||0)/2000, 6, 5], borderColor: '#5C9C92', backgroundColor: 'rgba(92,156,146,0.18)', pointBackgroundColor: '#5C9C92' }
       ]
     },
     options: {

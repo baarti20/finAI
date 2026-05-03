@@ -36,7 +36,16 @@ function togglePwd(id, btn) {
 }
 
 // ── Validators ─────────────────────────────────────────────────────
-const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const emailReGmail = /^[^\s@]+@gmail\.com$/i;
+const adminEmail = 'admin@finai.com';
+
+function isValidLoginEmail(email) {
+  const normalized = email.trim().toLowerCase();
+  return emailReGmail.test(normalized) || normalized === adminEmail;
+}
+function isValidRegisterEmail(email) {
+  return emailReGmail.test(email.trim().toLowerCase());
+}
 
 function pwdStrength(pwd) {
   let score = 0;
@@ -64,7 +73,8 @@ function validateLoginField(input, type) {
   if (type === 'email') {
     const v = input.value.trim();
     if (!v) return setFieldState(input, hint, '', false);
-    setFieldState(input, hint, emailRe.test(v) ? '✓ Valid email' : 'Enter a valid email address', emailRe.test(v));
+    const ok = isValidLoginEmail(v);
+    setFieldState(input, hint, ok ? '✓ Valid login email' : 'Use gmail.com or admin@finai.com', ok);
   }
   if (type === 'password') {
     const v = input.value;
@@ -93,7 +103,8 @@ function validateField(input, type) {
   if (type === 'email') {
     const v = input.value.trim();
     if (!v) return setFieldState(input, hint, '', false);
-    setFieldState(input, hint, emailRe.test(v) ? '✓ Valid email' : 'Enter a valid email address', emailRe.test(v));
+    const ok = isValidRegisterEmail(v);
+    setFieldState(input, hint, ok ? '✓ Valid Gmail address' : 'Enter a valid gmail.com address', ok);
   }
   if (type === 'password') {
     const v = input.value;
@@ -127,7 +138,7 @@ async function doLogin() {
   const password = document.getElementById('password').value;
 
   if (!email || !password) return showError('Please enter email and password.');
-  if (!emailRe.test(email)) return showError('Enter a valid email address.');
+  if (!isValidLoginEmail(email)) return showError('Enter a valid gmail.com email address or admin@finai.com.');
   if (password.length < 6)  return showError('Password must be at least 6 characters.');
 
   setLoading(true);
@@ -169,7 +180,7 @@ async function doRegister() {
     return showError('Please enter your full name.');
   if (username.length < 3 || !/^[a-zA-Z0-9_]+$/.test(username))
     return showError('Username: min 3 chars, letters/numbers/underscore only.');
-  if (!emailRe.test(email)) return showError('Enter a valid email address.');
+  if (!isValidRegisterEmail(email)) return showError('Registration requires a gmail.com email address.');
   if (password.length < 6)  return showError('Password must be at least 6 characters.');
   if (password !== confirm)  return showError('Passwords do not match.');
   if (!dob) return showError('Date of birth is required for account recovery.');
@@ -230,7 +241,7 @@ function fpSetLoading(step, on) {
 
 async function fpVerifyEmail() {
   const email = document.getElementById('fpEmail').value.trim();
-  if (!emailRe.test(email)) return fpShowError('Enter a valid email address.');
+  if (!isValidLoginEmail(email)) return fpShowError('Enter a valid gmail.com email address or admin@finai.com.');
   fpSetLoading(1, true); fpClearMsgs();
   try {
     const res = await fetch(`${API}/auth/verify-dob`, {
