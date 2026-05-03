@@ -1,63 +1,14 @@
 # ◈ FinAI — AI Financial Prediction System
 
-A production-ready, full-stack AI-powered financial prediction platform built with Python Flask, Scikit-learn, and JS. Features a dark glassmorphism UI, dual ML models, JWT authentication, INR currency support, file import for predictions, forgot password recovery, interactive analytics, admin panel, and PDF report generation.
+A full-stack Flask web app for financial prediction, analytics, and admin management.
 
----
-
-## 👨‍💻 Developer
-
-| Field  | Details          |
-|--------|------------------|
-| Name   | Aarti Bhanushali |
-| Name   | Kajal Bamaniya   |
-| Name   | Teesha Panchal   |
-| Name   | Frinda Patel     |
-| Stream | B.Sc. IT         |
-
----
-
-## 📁 Project Structure
-
-```
-finai/
-├── backend/
-│   ├── app.py                    # Flask entry point
-│   ├── requirements.txt
-│   ├── finai.db                  # SQLite database (auto-created)
-│   ├── models/
-│   │   ├── database.py           # DB models & queries (users, predictions, file snapshots)
-│   │   └── artifacts/            # Trained model files (auto-created)
-│   │       ├── best_model.pkl
-│   │       ├── linear_regression.pkl
-│   │       ├── random_forest.pkl
-│   │       ├── scaler.pkl
-│   │       └── model_meta.json
-│   ├── routes/
-│   │   └── api.py                # All REST API endpoints
-│   └── utils/
-│       ├── auth.py               # JWT helpers
-│       ├── predictor.py          # ML prediction engine
-│       └── pdf_report.py         # PDF report generator
-├── frontend/
-│   ├── templates/
-│   │   ├── index.html            # Landing page
-│   │   ├── login.html            # Login + Forgot Password modal
-│   │   ├── register.html         # Registration form
-│   │   ├── dashboard.html        # User dashboard
-│   │   └── admin.html            # Admin panel
-│   └── static/
-│       ├── css/main.css          # Global styles (dark theme, dropdowns, strength bar)
-│       └── js/
-│           ├── landing.js
-│           ├── auth.js           # Login, register, forgot password, validation
-│           ├── dashboard.js      # Prediction, analytics, file import, history
-│           └── admin.js          # Admin stats, predictions, model comparison, file viewer
-├── ml/
-│   └── train_model.py            # ML training script
-├── data/
-│   └── financial_dataset.csv     # Dataset (auto-created, grows with real predictions)
-└── README.md
-```
+Built with:
+- Python Flask backend
+- SQLite database
+- Scikit-learn ML models
+- HTML/CSS/JS frontend
+- JWT authentication and admin role support
+- PDF report generation
 
 ---
 
@@ -67,41 +18,126 @@ finai/
 - Python 3.9+
 - pip
 
-### 1. Clone / extract the project
+### Setup
 ```bash
 cd finai
-```
-
-### 2. Install dependencies
-```bash
 pip install -r backend/requirements.txt
 ```
 
-### 3. Train the ML models (first time only)
+### Train models (first time only)
 ```bash
 python ml/train_model.py
 ```
-Generates `data/financial_dataset.csv` (10,000 synthetic rows) and saves trained models to `backend/models/artifacts/`.
 
-### 4. Start the server
+### Start server
 ```bash
 python backend/app.py
 ```
 
-### 5. Open in browser
+### Open in browser
 ```
 http://localhost:5000
 ```
 
 ---
 
-## 🔑 Default Credentials
+## 🔐 Default Login
 
 | Role  | Email           | Password |
 |-------|-----------------|----------|
 | Admin | admin@finai.com | admin123 |
 
-Register any new account for regular user access. After registration, users are redirected to the login page.
+Register a new account for regular user access.
+
+---
+
+## 📌 Login and Registration Rules
+- User registration only accepts `@gmail.com` email addresses.
+- `admin@finai.com` is reserved for the admin account.
+- Login accepts either:
+  - Gmail addresses for users
+  - `admin@finai.com` for admin
+
+---
+
+## 📁 Project Structure
+
+```
+finai/
+├── backend/
+│   ├── app.py
+│   ├── requirements.txt
+│   ├── finai.db
+│   ├── models/
+│   │   ├── database.py
+│   │   └── artifacts/
+│   │       ├── best_model.pkl
+│   │       ├── linear_regression.pkl
+│   │       ├── random_forest.pkl
+│   │       ├── scaler.pkl
+│   │       └── model_meta.json
+│   ├── routes/
+│   │   └── api.py
+│   └── utils/
+│       ├── auth.py
+│       ├── predictor.py
+│       └── pdf_report.py
+├── frontend/
+│   ├── static/
+│   │   ├── css/main.css
+│   │   └── js/
+│   │       ├── auth.js
+│   │       ├── dashboard.js
+│   │       └── admin.js
+│   └── templates/
+│       ├── index.html
+│       ├── login.html
+│       ├── register.html
+│       ├── dashboard.html
+│       └── admin.html
+├── ml/
+│   └── train_model.py
+├── data/
+│   └── financial_dataset.csv
+└── README.md
+```
+
+---
+
+## 🌐 API Endpoints
+
+### Auth
+| Method | Endpoint                 | Description                              |
+|--------|--------------------------|------------------------------------------|
+| POST   | /api/auth/register       | Register new user                        |
+| POST   | /api/auth/login          | Login and receive JWT                    |
+| GET    | /api/auth/me             | Get current logged-in user               |
+| POST   | /api/auth/verify-dob     | Verify DOB for recovery                  |
+| POST   | /api/auth/verify-phone   | Verify phone for recovery                |
+| POST   | /api/auth/reset-password | Reset password after verification        |
+
+### Predictions
+| Method | Endpoint                 | Description                               |
+|--------|--------------------------|-------------------------------------------|
+| POST   | /api/predict             | Run AI prediction                         |
+| GET    | /api/predictions/history | Get past user predictions                 |
+| POST   | /api/predictions/report  | Download prediction PDF report            |
+
+### Admin
+| Method | Endpoint              | Description                             |
+|--------|-----------------------|-----------------------------------------|
+| GET    | /api/admin/users      | List all users                          |
+| GET    | /api/admin/predictions| List all predictions                    |
+| GET    | /api/admin/stats      | Platform and model metrics              |
+| POST   | /api/admin/retrain    | Retrain ML models                       |
+
+---
+
+## 📘 Important Notes
+- The app serves frontend pages from `frontend/templates` through Flask.
+- `backend/finai.db` and model artifacts are created automatically.
+- Deleting `backend/finai.db` resets the database.
+- GitHub Pages cannot host the full Flask backend; it can only serve static frontend assets.
 
 ---
 
@@ -123,236 +159,32 @@ reportlab==4.2.2
 
 ---
 
-## 🌐 API Endpoints
+## .gitignore Recommendation
 
-### Auth
-| Method | Endpoint                 | Description                                  | Auth Required |
-|--------|--------------------------|----------------------------------------------|---------------|
-| POST   | /api/auth/register       | Register new user (full profile + DOB)       | No            |
-| POST   | /api/auth/login          | Login, get JWT                               | No            |
-| GET    | /api/auth/me             | Get current user                             | Yes           |
-| POST   | /api/auth/verify-dob     | Verify email + DOB for account recovery      | No            |
-| POST   | /api/auth/verify-phone   | Verify email + phone for password recovery   | No            |
-| POST   | /api/auth/reset-password | Reset password after phone verification      | No            |
+For this repository, ignore generated and deployment-only files while keeping source code tracked.
 
-### Predictions
-| Method | Endpoint                 | Description                          | Auth Required |
-|--------|--------------------------|--------------------------------------|---------------|
-| POST   | /api/predict             | Run AI prediction (INR, file attach) | Yes           |
-| GET    | /api/predictions/history | User's past predictions + file data  | Yes           |
-| POST   | /api/predictions/report  | Download PDF report                  | Yes           |
+Recommended `.gitignore` entries:
 
-### Admin (admin role only)
-| Method | Endpoint              | Description                             |
-|--------|-----------------------|-----------------------------------------|
-| GET    | /api/admin/users      | All registered users (full profile)     |
-| GET    | /api/admin/predictions| All prediction logs with file snapshots |
-| GET    | /api/admin/stats      | Platform + model stats                  |
-| POST   | /api/admin/retrain    | Retrain ML models synchronously         |
+```
+# Python / Flask
+*.pyc
+__pycache__/
+instance/
+backend/finai.db
+backend/models/artifacts/
+.env
+*.env
 
-### Health
-| Method | Endpoint     | Description      |
-|--------|--------------|------------------|
-| GET    | /api/health  | API health check |
+# VS Code
+.vscode/
 
-### Register Request Body
-```json
-{
-  "full_name": "John Doe",
-  "username": "johndoe",
-  "email": "john@example.com",
-  "password": "secret123",
-  "dob": "1998-05-15",
-  "phone": "9876543210",
-  "gender": "Male",
-  "city": "Mumbai"
-}
+# OS / temporary
+.DS_Store
+Thumbs.db
+
+# Static deployment output
+frontend/static/build/
+frontend/static/dist/
 ```
 
-### Predict Request Body
-```json
-{
-  "income": 650000,
-  "fixed_expenses": 180000,
-  "variable_expenses": 120000,
-  "savings_goal": 100000,
-  "lifestyle_score": 5.5,
-  "file_name": "expenses.xlsx",
-  "file_data": [["income","fixed_expenses","variable_expenses","savings_goal","lifestyle_score"],[650000,180000,120000,100000,5.5]]
-}
-```
-> All monetary values are in **Indian Rupees (₹)**. No USD conversion is applied.
-
-### Predict Response
-```json
-{
-  "predicted_savings": 248500.00,
-  "model_used": "linear_regression",
-  "lr_prediction": 248500.00,
-  "rf_prediction": 241200.00,
-  "metrics": {
-    "linear_regression": { "r2": 0.747, "mae": 5430.75, "rmse": 7029.10 },
-    "random_forest":     { "r2": 0.732, "mae": 5540.96, "rmse": 7239.46 },
-    "best": "linear_regression"
-  },
-  "insights": [
-    {
-      "type": "success",
-      "icon": "✅",
-      "title": "Healthy Expense Ratio",
-      "text": "Great job! Expenses at 46.2% of income keeps you on a strong financial path."
-    }
-  ],
-  "input": { "..." : "..." }
-}
-```
-
----
-
-## 🗄️ Database Schema
-
-### users
-| Column        | Type    | Description                          |
-|---------------|---------|--------------------------------------|
-| id            | INTEGER | Primary key                          |
-| full_name     | TEXT    | User's full name                     |
-| username      | TEXT    | Unique username                      |
-| email         | TEXT    | Unique email address                 |
-| phone         | TEXT    | 10-digit phone number                |
-| gender        | TEXT    | Male / Female / Other                |
-| city          | TEXT    | City of residence                    |
-| password_hash | TEXT    | SHA256 hashed password               |
-| role          | TEXT    | user / admin                         |
-| dob           | TEXT    | Date of birth (for account recovery) |
-| created_at    | TEXT    | Registration timestamp               |
-| last_login    | TEXT    | Last login timestamp                 |
-
-### predictions
-| Column            | Type    | Description                           |
-|-------------------|---------|---------------------------------------|
-| id                | INTEGER | Primary key                           |
-| user_id           | INTEGER | Foreign key → users.id                |
-| income            | REAL    | Annual income (₹)                     |
-| fixed_expenses    | REAL    | Fixed expenses (₹)                    |
-| variable_expenses | REAL    | Variable expenses (₹)                 |
-| total_expenses    | REAL    | fixed + variable (₹)                  |
-| savings_goal      | REAL    | Target savings (₹)                    |
-| lifestyle_score   | REAL    | 1–10 lifestyle score                  |
-| predicted_savings | REAL    | AI predicted savings (₹)              |
-| model_used        | TEXT    | linear_regression / random_forest     |
-| file_name         | TEXT    | Attached file name (optional)         |
-| file_data         | TEXT    | JSON snapshot of file contents        |
-| created_at        | TEXT    | Prediction timestamp                  |
-
-> Each prediction is also appended to `data/financial_dataset.csv` to continuously grow the training dataset with real user data.
-
----
-
-## 🧠 ML Architecture
-
-### Dataset Generation
-- 10,000 synthetic financial records with realistic distributions
-- Income: Normal distribution (mean ₹65k, std ₹25k), clipped ₹15k–₹300k
-- Fixed expenses: 20–40% of income + noise
-- Variable expenses: Lifestyle-influenced, 10–30% of income × (lifestyle/5)
-- Savings: `(income − expenses) × goal_adherence − (lifestyle − 5) × 200 + noise`
-- Real user predictions are appended to the CSV and merged on retrain
-
-### Features
-| Feature           | Description                        |
-|-------------------|------------------------------------|
-| income            | Annual gross income (₹)            |
-| fixed_expenses    | Rent, insurance, subscriptions (₹) |
-| variable_expenses | Food, entertainment, transport (₹) |
-| total_expenses    | fixed + variable (₹)               |
-| savings_goal      | User's target annual savings (₹)   |
-| lifestyle_score   | 1 (frugal) to 10 (lavish)          |
-
-### Models
-| Model            | Config                                                              |
-|------------------|---------------------------------------------------------------------|
-| LinearRegression | StandardScaler + sklearn LinearRegression                           |
-| RandomForest     | 150 trees, max_depth=12, min_samples_split=5, n_jobs=-1, seed=42    |
-
-Best model selected automatically by R² on 20% holdout test set. Both predictions are always returned for comparison.
-
-### Insights Engine
-Rule-based insights generated per prediction covering:
-- Expense ratio (danger >80%, warning >65%, success otherwise)
-- Savings goal achievement or gap
-- Lifestyle score optimization tips
-- Savings rate vs 50/30/20 rule
-- High fixed cost warnings
-- Negative savings alert
-
----
-
-## 🎨 Design System
-
-- **Theme**: Dark glassmorphism — deep navy backgrounds, frosted glass cards
-- **Colors**: Blue (#0066ff) + Teal (#00d4aa) gradient accents
-- **Typography**: Syne (display/headings) + DM Sans (body)
-- **Components**: Glassmorphic cards, gradient buttons, animated sparklines, radar charts, dark dropdowns
-
----
-
-## 🔥 Features Summary
-
-### Auth
-- ✅ JWT authentication (register / login / protected routes)
-- ✅ Full registration — Full Name, Username, Email, Password, DOB, Phone, Gender, City
-- ✅ After registration → redirected to login page
-- ✅ SHA256 password hashing
-- ✅ Forgot Password — 3-step modal: email → phone verify → new password
-- ✅ Client-side validation: email format, username rules, password strength meter, phone format, confirm password match
-- ✅ Show/hide password toggle on all password fields
-
-### User Dashboard
-- ✅ Financial prediction form with INR inputs (₹)
-- ✅ File import — Excel (.xlsx) or Notes (.txt/.csv) auto-fills Income, Fixed & Variable Expenses
-- ✅ File chip with filename + ✕ cancel button
-- ✅ Quick fill presets: Low Income, Middle Class, High Earner
-- ✅ Prediction result card with ₹ savings, model badge, bar chart
-- ✅ AI financial insights (expense ratio, savings rate, lifestyle analysis)
-- ✅ Prediction history table with attached file viewer (📎 button)
-- ✅ Analytics panel with 3 modes:
-  - ⚡ **Current** — bar chart of latest prediction
-  - 📋 **History** — trend line across last 10 predictions
-  - ⚖️ **Compare** — grouped bar chart: current vs any past prediction with delta % badges
-- ✅ Budget health bars (Expense Ratio, Savings Rate, Goal Achievement)
-- ✅ PDF report download (ReportLab)
-- ✅ Rule-based chatbot financial assistant
-
-### Admin Dashboard
-- ✅ Overview: total users, predictions, avg savings (₹), best model
-- ✅ Model performance metrics (MAE, RMSE, R²)
-- ✅ Feature importance bars (Random Forest)
-- ✅ Model comparison bar chart (LR vs RF)
-- ✅ Users table — ID, Full Name, Username, Email, Phone, Gender, City, Role, Joined, Last Login
-- ✅ Prediction logs with ₹ amounts + attached file viewer per user
-- ✅ Per-user model comparison (radar chart — LR vs RF)
-- ✅ One-click model retraining (runs synchronously, merges real + synthetic data)
-
-### General
-- ✅ All amounts displayed in Indian Rupees (₹) — no USD conversion
-- ✅ Real predictions appended to dataset CSV for continuous learning
-- ✅ File snapshots stored in DB and viewable in history (user + admin)
-- ✅ SQLite with automatic schema init + migration safety for new columns
-- ✅ CORS headers for API access
-- ✅ Mobile-responsive design
-- ✅ Loading animations and overlays
-
----
-
-## 🛠 Environment Variables (optional)
-
-```bash
-JWT_SECRET=your-secret-key    # Default: finai-super-secret-key-2024
-SECRET_KEY=your-flask-secret  # Default: finai-flask-secret
-```
-
----
-
-## 📄 License
-
-Built for demonstration and educational purposes.
+> If you publish only the frontend to GitHub Pages, do not commit backend files like `backend/finai.db`, `backend/models/artifacts/`, or any local env files.
